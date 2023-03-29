@@ -33,10 +33,9 @@
 #include <algorithm>
 #include <filesystem>
 #include <curl/curl.h>
-#include <json/json.h>
-#include <json/reader.h>
 #include <boost/asio.hpp>
 #include <spdlog/spdlog.h>
+#include <boost/beast.hpp>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #endif
