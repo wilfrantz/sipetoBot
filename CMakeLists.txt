@@ -1,31 +1,36 @@
-CMAKE_MINIMUM_REQUIRED(VERSION 3.26.1)
-PROJECT(bobot VERSION 1.0.0 LANGUAGES CXX)
+cmake_minimum_required(VERSION 3.10...3.20)
+project(sipeto VERSION 1.0.0 LANGUAGES CXX)
 
-SET(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 17)
 
 # Find packages
-FIND_PACKAGE(spdlog REQUIRED)
-FIND_PACKAGE(Boost REQUIRED)
+find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
+find_library(TDJSON_LIBRARIES NAMES tdjson HINTS /usr/local)
+find_package(Boost REQUIRED COMPONENTS system thread)
 
-# FIND_LIBRARY(FMT_LIB NAMES fmt fmtd)
-
-OPTION(CMAKE_VERBOSE_MAKEFILE "Verbose Makefile" ON)
 OPTION(BUILD_TESTS "Build tests" ON)
+OPTION(CMAKE_VERBOSE_MAKEFILE "Verbose Makefile" ON)
 
-ADD_COMPILE_DEFINITIONS(ENGINE_VERSION="${PROJECT_VERSION}")
+add_compile_definitions(ENGINE_VERSION="${PROJECT_VERSION}")
 
-ADD_EXECUTABLE("${PROJECT_NAME}"
+add_executable(${PROJECT_NAME}
   src/main.cpp
+  src/sipeto.cpp
 )
 
-TARGET_LINK_LIBRARIES("${PROJECT_NAME}" PRIVATE
-  ${BOOST_LIBRARIES}
-  ${SPDLOG_LIBRARIES}
+
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  fmt::fmt
+  spdlog::spdlog
+  Boost::system
+  Boost::thread
+  ${TDJSON_LIBRARIES}
 )
 
-# IF (BUILD_TESTS)
-#   MESSAGE(STATUS "Building tests ...")
-#   ENABLE_TESTING()
-#   ADD_SUBDIRECTORY(test)
-#   ADD_TEST(NAME ${PROJECT_NAME}_tests COMMAND test/${PROJECT_NAME}_test)
-# ENDIF (BUILD_TESTS)
+# if (BUILD_TESTS)
+#   message(STATUS "Building tests ...")
+#   enable_testing()
+#   add_subdirectory(test)
+#   add_test(NAME ${PROJECT_NAME}_tests COMMAND test/${PROJECT_NAME}_test)
+# endif (BUILD_TESTS)
