@@ -36,8 +36,18 @@
 #include <json/json.h>
 #include <json/reader.h>
 #include <boost/asio.hpp>
+#include <cstdlib>
+#include <thread>
+#include <functional>
+#include <atomic>
+#include <condition_variable>
+#include <mutex>
+#include <chrono>
 #include <spdlog/spdlog.h>
 #include <boost/beast.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/http.hpp>
+#include <boost/beast/version.hpp>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 #endif

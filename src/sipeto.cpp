@@ -4,11 +4,12 @@
 
 namespace sipeto
 {
-
     std::shared_ptr<spdlog::logger> Sipeto::_logger = spdlog::stdout_color_mt("console");
 
-    Sipeto::Sipeto() : _configFile("config.json"),
-                       _uri("https://api.telegram.org/bot:" + _token + "/")
+    // Global variable to hold the received update
+    std::atomic<std::string> receivedUpdate("");
+
+    Sipeto::Sipeto() : _configFile("config.json")
     {
         setConfig();
         _logger = spdlog::get(readFromMap("project"));
@@ -59,7 +60,6 @@ namespace sipeto
                                 if (value.isString())
                                 {
                                     // Add data array to _config map
-                                    // spdlog::info("{}: {}", key, value.asString());
                                     _config[key] = value.asString();
                                 }
                                 else
@@ -73,7 +73,7 @@ namespace sipeto
                     }
                     else if (value.isString())
                     {
-                        // Process string values
+                        // Process string values: add data to _config map.
                         _config[key] = value.asString();
                     }
                     else
@@ -110,22 +110,62 @@ namespace sipeto
         return errorString;
     }
 
-    /// @brief Set the token from the config file
-    /// @param none.
-    /// @return none.
-    void Sipeto::setToken()
+    /// @brief: Define a function to start the server
+    /// Handle a request and produce a reply.
+    ///@param address[in] address of the request
+    ///@param port[in] port of the request
+    void startServer(const std::string &address, const std::string &port)
     {
+        try
+        {
+            // Create an io_context object
+            boost::asio::io_context ioc{1};
+
+            // Create a TCP acceptor object
+            tcp::acceptor acceptor{ioc, {tcp::v4(), std::atoi(port.c_str())}};
+
+            // Start accepting incoming connections
+            while (true)
+            {
+                // Create a TCP socket object
+                tcp::socket socket{ioc};
+
+                // Accept a connection
+                acceptor.accept(socket);
+
+                // Create a new thread to handle the request
+                std::thread{[&socket](auto req)
+                            { handle_request(std::move(req), socket); },
+                            http::request<http::string_body>{}}
+                    .detach();
+            }
+        }
+        catch (const std::exception &e)
+        {
+            std::cerr << "Error starting server: " << e.what() << std::endl;
+        }
+    }
+    std::string Sipeto::processRequest(const std::string &requestBody)
+    {
+        // Perform any processing you need based on the request body
+        // For example, parsing JSON data, interacting with a database, or calling other methods in the Sipeto class
+
+        // For demonstration purposes, let's assume the input is a string, and we want to reverse it
+        std::string responseBody = requestBody;
+        std::reverse(responseBody.begin(), responseBody.end());
+
+        // Return the processed response body
+        return responseBody;
     }
 
-    /// @brief 
+    /// @brief:
     void Sipeto::readInput()
     {
-
         spdlog::info("Welcome to {} {}.",
                      readFromMap("project"),
                      readFromMap("version"));
 
-        spdlog::info("Social Media Downloader Bot for Telegram.");
+        spdlog::info("Telegram Social Media Downloader Bot.");
         _logger->debug("Developed by: {}.", readFromMap("author"));
 
         // Create a JSON object representing the message to send
