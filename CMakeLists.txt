@@ -6,8 +6,9 @@ set(CMAKE_CXX_STANDARD 17)
 # Find packages
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
-find_library(TDJSON_LIBRARIES NAMES tdjson HINTS /usr/local)
+find_library(JSONCPP_LIBRARIES NAMES jsoncpp)
 find_package(Boost REQUIRED COMPONENTS system thread)
+find_library(TDJSON_LIBRARIES NAMES tdjson HINTS /usr/local)
 
 OPTION(BUILD_TESTS "Build tests" ON)
 OPTION(CMAKE_VERBOSE_MAKEFILE "Verbose Makefile" ON)
@@ -26,6 +27,7 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   Boost::system
   Boost::thread
   ${TDJSON_LIBRARIES}
+  /usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
 )
 
 # if (BUILD_TESTS)
