@@ -9,7 +9,7 @@ namespace sipeto
     // Global variable to hold the received update
     // std::atomic<std::string> receivedUpdate("");
 
-    Sipeto::Sipeto() : _configFile("config.json")
+    Sipeto::Sipeto() : _configFile("sipeto_config.json")
     {
         setConfig();
         _logger = spdlog::get(readFromMap("project"));
@@ -128,6 +128,10 @@ namespace sipeto
     ///@param port[in] port of the request
     void Sipeto::startServer(const std::string &address, const std::string &port)
     {
+        greetings();
+
+        spdlog::info("Starting server {}:{}", address, port);
+
         try
         {
             // Create an io_context object
@@ -157,7 +161,8 @@ namespace sipeto
         }
         catch (const std::exception &e)
         {
-            std::cerr << "Error starting server: " << e.what() << std::endl;
+            // std::string error = e.what();
+            spdlog::info("Error starting server: {}", e.what());
         }
     }
 
@@ -177,12 +182,6 @@ namespace sipeto
     /// @brief:
     void Sipeto::readInput()
     {
-        spdlog::info("Welcome to {} {}.",
-                     readFromMap("project"),
-                     readFromMap("version"));
-
-        spdlog::info("Telegram Social Media Downloader Bot.");
-        _logger->debug("Developed by: {}.", readFromMap("author"));
 
         // Create a JSON object representing the message to send
         const char *send_message_json = "{\"@type\":\"sendMessage\", \"chat_id\":123456, \"input_message_content\":{\"@type\":\"inputMessageText\", \"text\":{\"@type\":\"formattedText\", \"text\":\"Hello, Telegram!\"}}}";
@@ -192,4 +191,22 @@ namespace sipeto
 
         _logger->debug("Message sent.");
     }
+
+    void Sipeto::greetings()
+    {
+
+        spdlog::info("Welcome to {} {}.",
+                     readFromMap("project"),
+                     readFromMap("version"));
+
+        spdlog::info("Telegram Social Media Downloader Bot.");
+        _logger->debug("Developed by: {}.", readFromMap("author"));
+    }
+    void Sipeto::processTelegramUpdate(const Json::Value &update)
+    {
+        /// TODO: Implement logic to handle different types of updates
+        /// (e.g., messages, inline queries, etc.)
+        // and send appropriate responses using the Telegram Bot API
+    }
+
 } // !namespace sipeto

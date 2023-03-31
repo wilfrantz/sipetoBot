@@ -16,6 +16,8 @@ namespace sipeto
         void setConfig();
         void readInput();
         void returnMedia();
+        void greetings();
+        void processTelegramUpdate(const Json::Value &update);
         const std::string &readFromMap(const std::string &key);
         std::string processRequest(const std::string &requestBody);
         std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
