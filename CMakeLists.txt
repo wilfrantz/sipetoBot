@@ -18,6 +18,7 @@ add_compile_definitions(ENGINE_VERSION="${PROJECT_VERSION}")
 add_executable(${PROJECT_NAME}
   src/main.cpp
   src/sipeto.cpp
+  src/simple_http_server.cpp
 )
 
 

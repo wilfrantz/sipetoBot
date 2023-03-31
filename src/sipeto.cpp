@@ -7,7 +7,7 @@ namespace sipeto
     std::shared_ptr<spdlog::logger> Sipeto::_logger = spdlog::stdout_color_mt("console");
 
     // Global variable to hold the received update
-    std::atomic<std::string> receivedUpdate("");
+    // std::atomic<std::string> receivedUpdate("");
 
     Sipeto::Sipeto() : _configFile("config.json")
     {
@@ -91,6 +91,18 @@ namespace sipeto
         }
     }
 
+    // Update the handle_request function
+    void Sipeto::handleRequest(http::request<http::string_body> &&req, tcp::socket &socket)
+    {
+        // Extract the update from the request body and update the receivedUpdate variable
+        {
+            std::unique_lock<std::mutex> lock(receivedUpdateMutex);
+            receivedUpdate = req.body();
+        }
+
+        // ... (rest of the function)
+    }
+
     /// @brief Read from the config file
     /// @param key[in] The key to read from the config file.
     /// @return The value of the key or an error string.
@@ -114,7 +126,7 @@ namespace sipeto
     /// Handle a request and produce a reply.
     ///@param address[in] address of the request
     ///@param port[in] port of the request
-    void startServer(const std::string &address, const std::string &port)
+    void Sipeto::startServer(const std::string &address, const std::string &port)
     {
         try
         {
@@ -122,7 +134,7 @@ namespace sipeto
             boost::asio::io_context ioc{1};
 
             // Create a TCP acceptor object
-            tcp::acceptor acceptor{ioc, {tcp::v4(), std::atoi(port.c_str())}};
+            tcp::acceptor acceptor{ioc, {tcp::v4(), static_cast<unsigned short>(std::atoi(port.c_str()))}};
 
             // Start accepting incoming connections
             while (true)
@@ -134,9 +146,12 @@ namespace sipeto
                 acceptor.accept(socket);
 
                 // Create a new thread to handle the request
-                std::thread{[&socket](auto req)
-                            { handle_request(std::move(req), socket); },
-                            http::request<http::string_body>{}}
+                std::thread{[this](tcp::socket &socket)
+                            {
+                                http::request<http::string_body> req;
+                                this->handleRequest(std::move(req), socket);
+                            },
+                            std::ref(socket)}
                     .detach();
             }
         }
@@ -145,6 +160,7 @@ namespace sipeto
             std::cerr << "Error starting server: " << e.what() << std::endl;
         }
     }
+
     std::string Sipeto::processRequest(const std::string &requestBody)
     {
         // Perform any processing you need based on the request body

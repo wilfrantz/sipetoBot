@@ -19,15 +19,15 @@ namespace sipeto
         const std::string &readFromMap(const std::string &key);
         std::string processRequest(const std::string &requestBody);
         std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
+        void startServer(const std::string &address, const std::string &port);
         void handleRequest(http::request<http::string_body> &&req, tcp::socket &socket);
 
-        // Define a global variable to hold the received update
-        std::atomic<std::string> receivedUpdate("");
+        std::string receivedUpdate{};
+        std::mutex receivedUpdateMutex;
 
-        // Define a global variable to signal when an update has been received
-        std::condition_variable updateReceived;
         std::mutex updateMutex;
         bool updateAvailable = false;
+        std::condition_variable updateReceived;
 
         ~Sipeto() = default;
 

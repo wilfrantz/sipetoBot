@@ -12,36 +12,31 @@
 #include <condition_variable>
 #include <mutex>
 #include <chrono>
+#include <thread>
 
 #include "sipeto.h"
+#include "simple_http_server.h"
 
 using tcp = boost::asio::ip::tcp;
 namespace http = boost::beast::http;
 
-// Define a global variable to hold the received update
-// std::atomic<std::string> receivedUpdate("");
-
-// Define a global variable to signal when an update has been received
-// std::condition_variable updateReceived;
-// std::mutex updateMutex;
-// bool updateAvailable = false;
-
 int main(int argc, char **argv)
 {
-    spdlog::set_level(spdlog::level::debug);
-
     sipeto::Sipeto sipeto;
-    // Start the server on port 8080
-    std::thread{startServer, "0.0.0.0", "8080"}.detach();
+
+    std::thread{[&sipeto]
+                { sipeto.startServer("0.0.0.0", "8080"); }}
+        .detach();
 
     // Wait for an update to be received
-    std::unique_lock<std::mutex> lock(sipeto.updateMutex);
-    while (!sipeto.updateAvailable)
+    std::unique_lock<std::mutex> lock(sipeto.receivedUpdateMutex);
+    while (sipeto.receivedUpdate.empty())
     {
         sipeto.updateReceived.wait(lock);
     }
 
-    sipeto.readInput();
+    // Print the received update
+    spdlog::info("Received update: {}", sipeto.receivedUpdate);
 
     return 0;
 }
