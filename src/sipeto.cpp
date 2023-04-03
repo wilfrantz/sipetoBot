@@ -12,10 +12,10 @@ namespace sipeto
     Sipeto::Sipeto() : _configFile("sipeto_config.json")
     {
         setConfig();
-        _logger = spdlog::get(readFromMap("project"));
+        _logger = spdlog::get(getFromConfigMap("project"));
         if (!_logger)
         {
-            _logger = spdlog::stdout_color_mt(readFromMap("project"));
+            _logger = spdlog::stdout_color_mt(getFromConfigMap("project"));
         }
     }
 
@@ -94,22 +94,22 @@ namespace sipeto
     // Update the handle_request function
     void Sipeto::handleRequest(http::request<http::string_body> &&req, tcp::socket &socket)
     {
-        // Extract the update from the request body and update the receivedUpdate variable
+        // Extract update from request body and update receivedUpdate variable
         {
             std::unique_lock<std::mutex> lock(receivedUpdateMutex);
             receivedUpdate = req.body();
         }
 
-        // ... (rest of the function)
+        /// TODO: ... (rest of the function)
     }
 
     /// @brief Read from the config file
     /// @param key[in] The key to read from the config file.
     /// @return The value of the key or an error string.
-    const std::string &Sipeto::readFromMap(const std::string &key)
+    const std::string &Sipeto::getFromConfigMap(const std::string &key)
     {
         static std::string errorString;
-        ;
+
         try
         {
             return _config.at(key);
@@ -161,7 +161,6 @@ namespace sipeto
         }
         catch (const std::exception &e)
         {
-            // std::string error = e.what();
             spdlog::info("Error starting server: {}", e.what());
         }
     }
@@ -187,7 +186,7 @@ namespace sipeto
         const char *send_message_json = "{\"@type\":\"sendMessage\", \"chat_id\":123456, \"input_message_content\":{\"@type\":\"inputMessageText\", \"text\":{\"@type\":\"formattedText\", \"text\":\"Hello, Telegram!\"}}}";
 
         // Send the message using the Telegram API
-        td_json_client_execute(nullptr, send_message_json);
+        // td_json_client_execute(nullptr, send_message_json);
 
         _logger->debug("Message sent.");
     }
@@ -196,11 +195,11 @@ namespace sipeto
     {
 
         spdlog::info("Welcome to {} {}.",
-                     readFromMap("project"),
-                     readFromMap("version"));
+                     getFromConfigMap("project"),
+                     getFromConfigMap("version"));
+        spdlog::info("{}", getFromConfigMap("description"));
 
-        spdlog::info("Telegram Social Media Downloader Bot.");
-        _logger->debug("Developed by: {}.", readFromMap("author"));
+        _logger->debug("Developed by: {}.", getFromConfigMap("author"));
     }
     void Sipeto::processTelegramUpdate(const Json::Value &update)
     {

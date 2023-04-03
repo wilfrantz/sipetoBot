@@ -49,7 +49,7 @@ namespace simple_http_server
         void createSession();
 
         sipeto::Sipeto _sipeto;
-         boost::asio::io_context _ioc{1};
+        boost::asio::io_context _ioc{1};
         tcp::acceptor _acceptor;
         std::vector<std::shared_ptr<Session>> _sessions;
     };

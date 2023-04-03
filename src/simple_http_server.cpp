@@ -79,14 +79,16 @@ namespace simple_http_server
     void SimpleHTTPServer::Session::handleRequest()
     {
         // Check if the incoming request is a Telegram bot update
-        if (_req.target() == "/_bot_token")
+        // if (_req.target() == "/_bot_token")
+        if (_req.target() == _sipeto.getFromConfigMap("token"))
         {
-            // Process the Telegram bot update
+            spdlog::info("Received Telegram bot update");
+            // Process Telegram bot update
             processTelegramUpdate();
         }
         else
         {
-            // Process the request using the Sipeto class (existing implementation)
+            // Process request using Sipeto class (existing implementation)
             std::string result = _sipeto.processRequest(_req.body());
 
             // Generate the HTTP response (existing implementation)
@@ -122,7 +124,8 @@ namespace simple_http_server
         std::istringstream ss(_req.body());
         if (!Json::parseFromStream(builder, ss, &update, &errors))
         {
-            // If parsing fails, you can return an error response or handle it in a different way
+            /// NOTE: If parsing fails, return an error response
+            /// or handle it in a different way
             return;
         }
 

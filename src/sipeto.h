@@ -3,7 +3,7 @@
 
 #include "header.h"
 #include <filesystem>
-#include <td/telegram/td_json_client.h>
+// #include <td/telegram/td_json_client.h>
 
 namespace sipeto
 {
@@ -13,13 +13,14 @@ namespace sipeto
     {
     public:
         Sipeto();
+
         void setConfig();
         void readInput();
-        void returnMedia();
         void greetings();
+        void returnMedia();
         void processTelegramUpdate(const Json::Value &update);
-        const std::string &readFromMap(const std::string &key);
         std::string processRequest(const std::string &requestBody);
+        const std::string &getFromConfigMap(const std::string &key);
         std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
         void startServer(const std::string &address, const std::string &port);
         void handleRequest(http::request<http::string_body> &&req, tcp::socket &socket);
@@ -34,7 +35,7 @@ namespace sipeto
         ~Sipeto() = default;
 
     private:
-        std::string _configFile {}; 
+        std::string _configFile{};
         std::map<std::string, std::string> _config;
         static std::shared_ptr<spdlog::logger> _logger;
 
@@ -44,4 +45,4 @@ namespace sipeto
     };
 
 } // !namespace sipeto
-#endif // SIPETO_H
+#endif // !SIPETO_H
