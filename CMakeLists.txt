@@ -38,8 +38,7 @@ else(APPLE)
     spdlog::spdlog
     Boost::system
     Boost::thread
-    #   jsoncpp
-    #    ${TDJSON_LIBRARIES}
+    # ${TDJSON_LIBRARIES}
     /usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
     )
 endif()
