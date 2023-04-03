@@ -9,7 +9,8 @@
 #endif
 
 #ifdef __APPLE__
-
+#include <json/json.h>
+#include <json/reader.h>
 #else
 
 #include <unistd.h>
@@ -33,8 +34,6 @@
 #include <algorithm>
 #include <filesystem>
 #include <curl/curl.h>
-#include <json/json.h>
-#include <json/reader.h>
 #include <boost/asio.hpp>
 #include <cstdlib>
 #include <thread>

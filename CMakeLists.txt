@@ -27,8 +27,9 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   spdlog::spdlog
   Boost::system
   Boost::thread
-  ${TDJSON_LIBRARIES}
-  /usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
+  jsoncpp
+  #  ${TDJSON_LIBRARIES}
+  #/usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
 )
 
 # if (BUILD_TESTS)
