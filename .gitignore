@@ -1,0 +1,7 @@
+.git
+build/
+.vscode/
+config.json
+telegram-bot-api/
+message.json
+example.cpp
