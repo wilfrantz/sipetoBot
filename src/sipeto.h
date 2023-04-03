@@ -3,7 +3,11 @@
 
 #include "header.h"
 #include <filesystem>
+<<<<<<< HEAD
 // #include <td/telegram/td_json_client.h>
+=======
+//#include <td/telegram/td_json_client.h>
+>>>>>>> 49bde87 (Fixes config issue on Linux)
 
 namespace sipeto
 {
@@ -45,4 +49,8 @@ namespace sipeto
     };
 
 } // !namespace sipeto
+<<<<<<< HEAD
 #endif // !SIPETO_H
+=======
+#endif // SIPETO_H
+>>>>>>> 49bde87 (Fixes config issue on Linux)
