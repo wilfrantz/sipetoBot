@@ -5,7 +5,3 @@ config.json
 telegram-bot-api/
 message.json
 example.cpp
-<<<<<<< HEAD
-=======
-
->>>>>>> 49bde87 (Fixes config issue on Linux)
