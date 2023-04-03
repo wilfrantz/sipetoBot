@@ -6,14 +6,14 @@
 #include <io.h>
 #define F_OK 0
 #define access _access
-#endif
+#endif // _WIN32
 
 #ifdef __APPLE__
 #include <json/json.h>
 #include <json/reader.h>
+
 #else
 
-#include <unistd.h>
 #include <spdlog/spdlog.h>
 #include <jsoncpp/json/json.h>
 #include <jsoncpp/json/reader.h>
@@ -23,7 +23,8 @@
 #include <curl/curl.h>
 #include <bits/stdc++.h>
 
-#endif
+#endif // __APPLE__
+
 #include <list>
 #include <string>
 #include <vector>
@@ -49,4 +50,4 @@
 #include <boost/beast/version.hpp>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
-#endif
+#endif // !HEADER_HPP

@@ -21,28 +21,16 @@ add_executable(${PROJECT_NAME}
   src/simple_http_server.cpp
 )
 
-set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk)
 
-if (UNIX AND NOT APPLE)
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-        fmt::fmt
-        spdlog::spdlog
-        Boost::system
-        Boost::thread
-        jsoncpp
-        # ${TDJSON_LIBRARIES}
-    )
-else(APPLE)
-    target_link_libraries(${PROJECT_NAME} PRIVATE
-    fmt::fmt
-    spdlog::spdlog
-    Boost::system
-    Boost::thread
-    #   jsoncpp
-    #    ${TDJSON_LIBRARIES}
-    /usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
-    )
-endif()
+target_link_libraries(${PROJECT_NAME} PRIVATE
+  fmt::fmt
+  spdlog::spdlog
+  Boost::system
+  Boost::thread
+  jsoncpp
+  #${TDJSON_LIBRARIES}
+  #/usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
+)
 
 # if (BUILD_TESTS)
 #   message(STATUS "Building tests ...")
