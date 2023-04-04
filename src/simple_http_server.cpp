@@ -79,8 +79,8 @@ namespace simple_http_server
     void SimpleHTTPServer::Session::handleRequest()
     {
         // Check if the incoming request is a Telegram bot update
-        // if (_req.target() == "/_bot_token")
-        if (_req.target() == _sipeto.getFromConfigMap("token"))
+        // if (_req.target() == _sipeto.getFromConfigMap("token"))
+        if (_req.target() == "/" + _sipeto.getFromConfigMap("token"))
         {
             spdlog::info("Received Telegram bot update");
             // Process Telegram bot update

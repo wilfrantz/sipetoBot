@@ -6,7 +6,7 @@
 #include <io.h>
 #define F_OK 0
 #define access _access
-#endif // _WIN32
+#endif // !_WIN32
 
 #ifdef __APPLE__
 #include <json/json.h>
@@ -23,7 +23,7 @@
 #include <curl/curl.h>
 #include <bits/stdc++.h>
 
-#endif // __APPLE__
+#endif // !__APPLE__
 
 #include <list>
 #include <string>
