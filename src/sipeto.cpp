@@ -184,7 +184,7 @@ namespace sipeto
         const char *send_message_json = "{\"@type\":\"sendMessage\", \"chat_id\":123456, \"input_message_content\":{\"@type\":\"inputMessageText\", \"text\":{\"@type\":\"formattedText\", \"text\":\"Hello, Telegram!\"}}}";
 
         // Send the message using the Telegram API
-        //td_json_client_execute(nullptr, send_message_json);
+        // td_json_client_execute(nullptr, send_message_json);
 
         _logger->debug("Message sent.");
     }

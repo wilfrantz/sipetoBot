@@ -4,16 +4,14 @@ namespace simpleHttpServer
 {
     SimpleHTTPServer::SimpleHTTPServer(const std::string &address,
                                        const std::string &port)
-        : _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))}),
-          _sipeto() // Initialize Sipeto object
+        : _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))})
     {
-        createSession();
-        curl_global_init(CURL_GLOBAL_DEFAULT);
+        // createSession();
+        // curl_global_init(CURL_GLOBAL_DEFAULT);
     }
 
     void SimpleHTTPServer::start()
     {
-        // setWebhook();
         createSession();
         _ioc.run();
     }
@@ -70,7 +68,7 @@ namespace simpleHttpServer
     void SimpleHTTPServer::setWebhook()
     {
         spdlog::info("Setting up webhook...");
-        std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setWebhook?url=" + _sipeto.getFromConfigMap("webhookUrl");
+        std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setWebhook?url=" + _sipeto.getFromConfigMap("webhook");
 
         CURL *curl;
         CURLcode res;
@@ -99,7 +97,7 @@ namespace simpleHttpServer
                 }
                 else
                 {
-                    bool webhookIsSet = responseJson["result"]["url"].asString() == _sipeto.getFromConfigMap(" webhookUrl");
+                    bool webhookIsSet = responseJson["result"]["url"].asString() == _sipeto.getFromConfigMap(" webhook");
                     if (webhookIsSet)
                     {
                         spdlog::info("Webhook is already set.");
