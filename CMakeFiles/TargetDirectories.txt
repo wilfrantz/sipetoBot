@@ -1,0 +1,3 @@
+/home/dede/Code/Github/sipeto/CMakeFiles/sipeto.dir
+/home/dede/Code/Github/sipeto/CMakeFiles/edit_cache.dir
+/home/dede/Code/Github/sipeto/CMakeFiles/rebuild_cache.dir
