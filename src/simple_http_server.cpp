@@ -69,6 +69,7 @@ namespace simpleHttpServer
      * TODO: check if the webhook is already set */
     void SimpleHTTPServer::setWebhook()
     {
+        spdlog::info("Setting up webhook...");
         std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setWebhook?url=" + _sipeto.getFromConfigMap("webhookUrl");
 
         CURL *curl;
