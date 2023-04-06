@@ -13,7 +13,7 @@ namespace simpleHttpServer
 
     void SimpleHTTPServer::start()
     {
-        setWebhook();
+        // setWebhook();
         createSession();
         _ioc.run();
     }
