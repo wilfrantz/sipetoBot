@@ -13,15 +13,15 @@
 #include <json/reader.h>
 
 #else
+#include <iostream>
+#include <filesystem>
+#include <curl/curl.h>
+#include <bits/stdc++.h>
 
 #include <spdlog/spdlog.h>
 #include <jsoncpp/json/json.h>
 #include <jsoncpp/json/reader.h>
 
-#include <iostream>
-#include <filesystem>
-#include <curl/curl.h>
-#include <bits/stdc++.h>
 
 #endif // !__APPLE__
 

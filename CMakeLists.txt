@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 17)
 # Find packages
 find_package(fmt REQUIRED)
 find_package(spdlog REQUIRED)
+find_package(CURL REQUIRED)
 find_library(JSONCPP_LIBRARIES NAMES jsoncpp)
 find_package(Boost REQUIRED COMPONENTS system thread)
 find_library(TDJSON_LIBRARIES NAMES tdjson HINTS /usr/local)
@@ -29,6 +30,7 @@ if (UNIX AND NOT APPLE)
         spdlog::spdlog
         Boost::system
         Boost::thread
+        CURL::libcurl
         jsoncpp
         # ${TDJSON_LIBRARIES}
     )
@@ -38,7 +40,8 @@ else(APPLE)
     spdlog::spdlog
     Boost::system
     Boost::thread
-    # ${TDJSON_LIBRARIES}
+    CURL::libcurl
+    #    ${TDJSON_LIBRARIES}
     /usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
     )
 endif()

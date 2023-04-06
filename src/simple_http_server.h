@@ -1,25 +1,25 @@
 
 #ifndef SIMPLE_HTTP_SERVER_H
 #define SIMPLE_HTTP_SERVER_H
-// Include Sipeto class header file
+
 #include "sipeto.h"
 
 using tcp = boost::asio::ip::tcp;
 namespace http = boost::beast::http;
 
-namespace simple_http_server
+namespace simpleHttpServer
 {
-
     class SimpleHTTPServer
     {
     public:
-        // SimpleHTTPServer() = default;
+        SimpleHTTPServer(const std::string &address = "localhost",
+                         const std::string &port = "443");
 
         void start();
+        void setWebhook();
         void runSessionMethod();
-        SimpleHTTPServer(const std::string &address, const std::string &port);
 
-        ~SimpleHTTPServer() = default;
+        ~SimpleHTTPServer() { curl_global_cleanup(); }
 
     private:
         class Session : public std::enable_shared_from_this<Session>
@@ -35,8 +35,8 @@ namespace simple_http_server
             void processTelegramUpdate();
 
         private:
-            void handleRequest();
             void readRequest();
+            void handleRequest();
             void writeResponse();
 
             tcp::socket _socket;
@@ -47,12 +47,14 @@ namespace simple_http_server
         };
 
         void createSession();
+        std::stringstream _responseBuffer;
 
         sipeto::Sipeto _sipeto;
         boost::asio::io_context _ioc{1};
         tcp::acceptor _acceptor;
         std::vector<std::shared_ptr<Session>> _sessions;
+        static size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata);
     };
 
-} // !namespace simple_http_server
+} // !namespace simpleHttpServer
 #endif // !SIMPLE_HTTP_SERVER_H

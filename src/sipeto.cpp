@@ -1,6 +1,4 @@
 #include "sipeto.h"
-#include <filesystem>
-#include <boost/json/src.hpp>
 
 namespace sipeto
 {

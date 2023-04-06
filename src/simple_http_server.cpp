@@ -1,6 +1,6 @@
 #include "simple_http_server.h"
 
-namespace simple_http_server
+namespace simpleHttpServer
 {
     SimpleHTTPServer::SimpleHTTPServer(const std::string &address,
                                        const std::string &port)
@@ -8,10 +8,12 @@ namespace simple_http_server
           _sipeto() // Initialize Sipeto object
     {
         createSession();
+        curl_global_init(CURL_GLOBAL_DEFAULT);
     }
 
     void SimpleHTTPServer::start()
     {
+        setWebhook();
         createSession();
         _ioc.run();
     }
@@ -48,6 +50,67 @@ namespace simple_http_server
     void SimpleHTTPServer::Session::start()
     {
         readRequest();
+    }
+
+    size_t SimpleHTTPServer::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
+    {
+        size_t realsize = size * nmemb;
+        std::stringstream *responseBuffer = (std::stringstream *)userdata;
+        responseBuffer->write(ptr, realsize);
+        return realsize;
+    }
+
+    /// @brief  set up a webhook for Telegram bot
+    /// @param none
+    /// @return none
+    /* NOTE: Once a webhook has been set up for
+     * a Telegram bot, it does not need to be set
+     * up again unless there is a change the URL or disable the webhook.
+     * TODO: check if the webhook is already set */
+    void SimpleHTTPServer::setWebhook()
+    {
+        std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setWebhook?url=" + _sipeto.getFromConfigMap("webhookUrl");
+
+        CURL *curl;
+        CURLcode res;
+        curl = curl_easy_init();
+        if (curl)
+        {
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &SimpleHTTPServer::writeCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &_responseBuffer);
+
+            res = curl_easy_perform(curl);
+
+            if (res != CURLE_OK)
+            {
+                spdlog::error("curl_easy_perform() failed: {}", curl_easy_strerror(res));
+            }
+            else
+            {
+                // Check if webhook is already set
+                std::string responseString = _responseBuffer.str();
+                Json::Value responseJson;
+                Json::Reader reader;
+                if (!reader.parse(responseString, responseJson))
+                {
+                    spdlog::error("Failed to parse JSON response from getWebhookInfo");
+                }
+                else
+                {
+                    bool webhookIsSet = responseJson["result"]["url"].asString() == _sipeto.getFromConfigMap(" webhookUrl");
+                    if (webhookIsSet)
+                    {
+                        spdlog::info("Webhook is already set.");
+                        return;
+                    }
+                }
+            }
+        }
+        else
+        {
+            spdlog::error("curl_easy_init() failed: {}", curl_easy_strerror(res));
+        }
     }
 
     void SimpleHTTPServer::Session::acceptConnections()
