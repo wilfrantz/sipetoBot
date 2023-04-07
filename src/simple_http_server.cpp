@@ -102,7 +102,7 @@ namespace simpleHttpServer
 
                     if (webhookIsSet)
                     {
-                        spdlog::info("{}", responseJson["description"].asString());
+                        spdlog::info("{}.", responseJson["description"].asString());
                         return;
                     }
                 }

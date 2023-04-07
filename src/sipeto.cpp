@@ -105,9 +105,24 @@ namespace sipeto
         catch (const std::out_of_range &e)
         {
             _logger->error("Error retrieving key: {} from config file: {}", key, e.what());
-            return errorString = "Error retrieving " + key + "from configuration file";
+            return errorString = "Error retrieving " + key + "from config file";
+            exit(1);
         }
         return errorString;
+    }
+
+    /// @brief Welcome message
+    /// @param none.
+    /// @return none.
+    void Sipeto::greetings()
+    {
+
+        spdlog::info("Welcome to {} {}.",
+                     getFromConfigMap("project"),
+                     getFromConfigMap("version"));
+        spdlog::info("{}", getFromConfigMap("description"));
+
+        _logger->debug("Developed by: {}.", getFromConfigMap("author"));
     }
 
     /// @brief: Define a function to start the server
@@ -121,7 +136,6 @@ namespace sipeto
         const std::string &port = getFromConfigMap("port");
         const std::string &address = getFromConfigMap("address");
 
-        spdlog::info("Starting server {}:{}", address, port);
 
         try
         {
@@ -134,6 +148,7 @@ namespace sipeto
             // Start accepting incoming connections
             while (true)
             {
+                spdlog::info("[Server started] {}:{}", address, port);
                 // Create a TCP socket object
                 tcp::socket socket{ioc};
 
@@ -201,19 +216,6 @@ namespace sipeto
         _logger->debug("Message sent.");
     }
 
-    /// @brief Welcome message
-    /// @param none.
-    /// @return none.
-    void Sipeto::greetings()
-    {
-
-        spdlog::info("Welcome to {} {}.",
-                     getFromConfigMap("project"),
-                     getFromConfigMap("version"));
-        spdlog::info("{}", getFromConfigMap("description"));
-
-        _logger->debug("Developed by: {}.", getFromConfigMap("author"));
-    }
 
 
     void Sipeto::processTelegramUpdate(const Json::Value &update)
