@@ -90,7 +90,6 @@ namespace sipeto
         }
     }
 
-
     /// @brief Read from the config file
     /// @param key[in] The key to read from the config file.
     /// @return The value of the key or an error string.
@@ -136,14 +135,27 @@ namespace sipeto
         const std::string &port = getFromConfigMap("port");
         const std::string &address = getFromConfigMap("address");
 
-
         try
         {
             // Create an io_context object
             boost::asio::io_context ioc{1};
 
+            // Resolve the endpoint and set reuse_address option
+            boost::asio::ip::tcp::resolver resolver(ioc);
+            boost::asio::ip::tcp::resolver::query query(address, port, boost::asio::ip::resolver_query_base::flags::v4_mapped | boost::asio::ip::resolver_query_base::flags::numeric_service);
+            auto endpoints = resolver.resolve(query);
+
             // Create a TCP acceptor object
             tcp::acceptor acceptor{ioc, {tcp::v4(), static_cast<unsigned short>(std::atoi(port.c_str()))}};
+
+            boost::asio::ip::tcp::endpoint endpoint = acceptor.local_endpoint();
+            int fd = acceptor.native_handle();
+            int on = 1;
+            if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+            {
+                // TODO: handle error
+                spdlog::info("Error setting socket option: {}", strerror(errno));
+            }
 
             // Start accepting incoming connections
             while (true)
@@ -188,7 +200,7 @@ namespace sipeto
     }
 
     /// @brief  Process the request body and return the response body
-    /// @param requestBody 
+    /// @param requestBody
     /// @return none.
     std::string Sipeto::processRequest(const std::string &requestBody)
     {
@@ -215,8 +227,6 @@ namespace sipeto
 
         _logger->debug("Message sent.");
     }
-
-
 
     void Sipeto::processTelegramUpdate(const Json::Value &update)
     {
