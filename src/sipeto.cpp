@@ -110,11 +110,10 @@ namespace sipeto
         return errorString;
     }
 
-
     /// @brief  Print a welcome message
     /// @param  none.
     /// @return none.
-    void Sipeto::greetings()
+    void Sipeto::displayGreetings()
     {
 
         spdlog::info("Welcome to {} {}.",
@@ -131,14 +130,14 @@ namespace sipeto
     ///@param port[in] port of the request
     void Sipeto::startServer()
     {
-        greetings();
+        displayGreetings();
 
         const std::string &port = getFromConfigMap("port");
         const std::string &address = getFromConfigMap("address");
 
         try
         {
-            // Create an io_context object
+            // Create an io_context object with a single worker thread
             boost::asio::io_context ioc{1};
 
             // Resolve the endpoint and set reuse_address option
@@ -149,19 +148,18 @@ namespace sipeto
             // Create a TCP acceptor object
             tcp::acceptor acceptor{ioc, {tcp::v4(), static_cast<unsigned short>(std::atoi(port.c_str()))}};
 
-            boost::asio::ip::tcp::endpoint endpoint = acceptor.local_endpoint();
+            // Enable reuse_address option
             int fd = acceptor.native_handle();
             int on = 1;
             if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
             {
-                // TODO: handle error
                 spdlog::info("Error setting socket option: {}", strerror(errno));
             }
 
             // Start accepting incoming connections
+            spdlog::info("[Server started] {}:{}", address, port);
             while (true)
             {
-                spdlog::info("[Server started] {}:{}", address, port);
                 // Create a TCP socket object
                 tcp::socket socket{ioc};
 
@@ -172,7 +170,7 @@ namespace sipeto
                 std::thread{[this](tcp::socket &socket)
                             {
                                 http::request<http::string_body> req;
-                                this->handleRequest(std::move(req), socket);
+                                handleRequest(std::move(req), socket);
                             },
                             std::ref(socket)}
                     .detach();

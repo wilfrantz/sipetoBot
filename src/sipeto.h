@@ -16,7 +16,7 @@ namespace sipeto
 
         void setConfig();
         void readInput();
-        void greetings();
+        void displayGreetings();
         void returnMedia();
         void startServer();
         void processTelegramUpdate(const Json::Value &update);
