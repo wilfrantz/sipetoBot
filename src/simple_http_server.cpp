@@ -70,6 +70,7 @@ namespace simpleHttpServer
     {
         spdlog::info("Setting up webHookUrl...");
         std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setwebHookUrl?url=" + _sipeto.getFromConfigMap("webHookUrl") + "&webhook_use_self_signed=true";
+        spdlog::info("url: {}", url);
 
         CURL *curl;
         CURLcode res;
