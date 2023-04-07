@@ -3,7 +3,7 @@
 
 #include "header.h"
 #include <filesystem>
-//#include <td/telegram/td_json_client.h>
+// #include <td/telegram/td_json_client.h>
 
 namespace sipeto
 {
@@ -18,13 +18,15 @@ namespace sipeto
         void readInput();
         void greetings();
         void returnMedia();
+        void startServer();
         void processTelegramUpdate(const Json::Value &update);
         std::string processRequest(const std::string &requestBody);
         const std::string &getFromConfigMap(const std::string &key);
         std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
-        // void startServer(const std::string &address, const std::string &port);
-        void startServer();
         void handleRequest(http::request<http::string_body> &&req, tcp::socket &socket);
+        boost::asio::ip::tcp::resolver::results_type resolveEndpoints(boost::asio::io_context &ioc, const std::string &address, const std::string &port);
+        tcp::acceptor createAcceptor(boost::asio::io_context &ioc, const boost::asio::ip::tcp::resolver::results_type &endpoints);
+        void acceptConnections(boost::asio::io_context &ioc, tcp::acceptor &acceptor, const std::string &address, const std::string &port);
 
         std::string receivedUpdate{};
         std::mutex receivedUpdateMutex;

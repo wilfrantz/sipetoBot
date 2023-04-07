@@ -113,21 +113,6 @@ namespace sipeto
     /// @brief Welcome message
     /// @param none.
     /// @return none.
-    void Sipeto::greetings()
-    {
-
-        spdlog::info("Welcome to {} {}.",
-                     getFromConfigMap("project"),
-                     getFromConfigMap("version"));
-        spdlog::info("{}", getFromConfigMap("description"));
-
-        _logger->debug("Developed by: {}.", getFromConfigMap("author"));
-    }
-
-    /// @brief: Define a function to start the server
-    /// Handle a request and produce a reply.
-    ///@param address[in] address of the request
-    ///@param port[in] port of the request
     void Sipeto::startServer()
     {
         greetings();
@@ -141,48 +126,154 @@ namespace sipeto
             boost::asio::io_context ioc{1};
 
             // Resolve the endpoint and set reuse_address option
-            boost::asio::ip::tcp::resolver resolver(ioc);
-            boost::asio::ip::tcp::resolver::query query(address, port, boost::asio::ip::resolver_query_base::flags::v4_mapped | boost::asio::ip::resolver_query_base::flags::numeric_service);
-            auto endpoints = resolver.resolve(query);
+            boost::asio::ip::tcp::resolver::results_type endpoints = resolveEndpoints(ioc, address, port);
 
-            // Create a TCP acceptor object
-            tcp::acceptor acceptor{ioc, {tcp::v4(), static_cast<unsigned short>(std::atoi(port.c_str()))}};
-
-            boost::asio::ip::tcp::endpoint endpoint = acceptor.local_endpoint();
-            int fd = acceptor.native_handle();
-            int on = 1;
-            if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
-            {
-                // TODO: handle error
-                spdlog::info("Error setting socket option: {}", strerror(errno));
-            }
+            // Create a TCP acceptor object and configure socket options
+            tcp::acceptor acceptor = createAcceptor(ioc, endpoints);
 
             // Start accepting incoming connections
-            while (true)
-            {
-                spdlog::info("[Server started] {}:{}", address, port);
-                // Create a TCP socket object
-                tcp::socket socket{ioc};
-
-                // Accept a connection
-                acceptor.accept(socket);
-
-                // Create a new thread to handle the request
-                std::thread{[this](tcp::socket &socket)
-                            {
-                                http::request<http::string_body> req;
-                                this->handleRequest(std::move(req), socket);
-                            },
-                            std::ref(socket)}
-                    .detach();
-            }
+            acceptConnections(ioc, acceptor, address, port);
         }
         catch (const std::exception &e)
         {
-            spdlog::info("Error starting server: {}", e.what());
+            spdlog::error("Error starting server: {}", e.what());
             exit(1);
         }
     }
+
+    // Resolve the endpoint and set reuse_address option
+    boost::asio::ip::tcp::resolver::results_type Sipeto::resolveEndpoints(boost::asio::io_context &ioc, const std::string &address, const std::string &port)
+    {
+        boost::asio::ip::tcp::resolver resolver(ioc);
+        boost::asio::ip::tcp::resolver::query query(address, port, boost::asio::ip::resolver_query_base::flags::v4_mapped | boost::asio::ip::resolver_query_base::flags::numeric_service);
+        return resolver.resolve(query);
+    }
+
+    // Create a TCP acceptor object and configure socket options
+    tcp::acceptor Sipeto::createAcceptor(boost::asio::io_context &ioc,
+                                         const boost::asio::ip::tcp::resolver::results_type &endpoints)
+    {
+        tcp::acceptor acceptor(ioc);
+
+        for (const auto &endpoint : endpoints)
+        {
+            try
+            {
+                acceptor.open(endpoint.endpoint().protocol());
+                acceptor.set_option(tcp::acceptor::reuse_address(true));
+                acceptor.bind(endpoint);
+                acceptor.listen(boost::asio::socket_base::max_listen_connections);
+                break;
+            }
+            catch (const boost::system::system_error &)
+            {
+                if (!acceptor.is_open())
+                {
+                    throw;
+                }
+            }
+        }
+
+        return acceptor;
+    }
+
+    // Start accepting incoming connections
+    void Sipeto::acceptConnections(boost::asio::io_context &ioc, tcp::acceptor &acceptor, const std::string &address, const std::string &port)
+    {
+        while (true)
+        {
+            spdlog::info("[Server started] {}:{}", address, port);
+
+            // Create a TCP socket object
+            tcp::socket socket{ioc};
+
+            // Accept a connection
+            acceptor.accept(socket);
+
+            // Create a new thread to handle the request
+            std::thread{[this](tcp::socket &socket)
+                        {
+                            http::request<http::string_body> req;
+                            this->handleRequest(std::move(req), socket);
+                        },
+                        std::ref(socket)}
+                .detach();
+        }
+    }
+
+    /// @brief  Print a welcome message
+    /// @param  none.
+    /// @return none.
+    void Sipeto::greetings()
+    {
+
+        spdlog::info("Welcome to {} {}.",
+                     getFromConfigMap("project"),
+                     getFromConfigMap("version"));
+        spdlog::info("{}", getFromConfigMap("description"));
+
+        _logger->debug("Developed by: {}.", getFromConfigMap("author"));
+    }
+
+    // /// @brief: Define a function to start the server
+    // /// Handle a request and produce a reply.
+    // ///@param address[in] address of the request
+    // ///@param port[in] port of the request
+    // void Sipeto::startServer()
+    // {
+    //     greetings();
+
+    //     const std::string &port = getFromConfigMap("port");
+    //     const std::string &address = getFromConfigMap("address");
+
+    //     try
+    //     {
+    //         // Create an io_context object
+    //         boost::asio::io_context ioc{1};
+
+    //         // Resolve the endpoint and set reuse_address option
+    //         boost::asio::ip::tcp::resolver resolver(ioc);
+    //         boost::asio::ip::tcp::resolver::query query(address, port, boost::asio::ip::resolver_query_base::flags::v4_mapped | boost::asio::ip::resolver_query_base::flags::numeric_service);
+    //         auto endpoints = resolver.resolve(query);
+
+    //         // Create a TCP acceptor object
+    //         tcp::acceptor acceptor{ioc, {tcp::v4(), static_cast<unsigned short>(std::atoi(port.c_str()))}};
+
+    //         boost::asio::ip::tcp::endpoint endpoint = acceptor.local_endpoint();
+    //         int fd = acceptor.native_handle();
+    //         int on = 1;
+    //         if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+    //         {
+    //             // TODO: handle error
+    //             spdlog::info("Error setting socket option: {}", strerror(errno));
+    //         }
+
+    //         // Start accepting incoming connections
+    //         while (true)
+    //         {
+    //             spdlog::info("[Server started] {}:{}", address, port);
+    //             // Create a TCP socket object
+    //             tcp::socket socket{ioc};
+
+    //             // Accept a connection
+    //             acceptor.accept(socket);
+
+    //             // Create a new thread to handle the request
+    //             std::thread{[this](tcp::socket &socket)
+    //                         {
+    //                             http::request<http::string_body> req;
+    //                             this->handleRequest(std::move(req), socket);
+    //                         },
+    //                         std::ref(socket)}
+    //                 .detach();
+    //         }
+    //     }
+    //     catch (const std::exception &e)
+    //     {
+    //         spdlog::info("Error starting server: {}", e.what());
+    //         exit(1);
+    //     }
+    // }
 
     /// @brief: Define a function to handle the request
     /// @param req[in] request
