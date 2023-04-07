@@ -16,7 +16,7 @@ namespace simpleHttpServer
                          const std::string &port = "443");
 
         void start();
-        void setWebhook();
+        void setwebHookUrl();
         void runSessionMethod();
 
         ~SimpleHTTPServer() { curl_global_cleanup(); }

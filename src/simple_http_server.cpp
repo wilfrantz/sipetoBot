@@ -59,17 +59,17 @@ namespace simpleHttpServer
         return realsize;
     }
 
-    /// @brief  set up a webhook for Telegram bot
+    /// @brief  set up a webHookUrl for Telegram bot
     /// @param none
     /// @return none
-    /* NOTE: Once a webhook has been set up for
+    /* NOTE: Once a webHookUrl has been set up for
      * a Telegram bot, it does not need to be set
-     * up again unless there is a change the URL or disable the webhook.
-     * TODO: check if the webhook is already set */
-    void SimpleHTTPServer::setWebhook()
+     * up again unless there is a change the URL or disable the webHookUrl.
+     * TODO: check if the webHookUrl is already set */
+    void SimpleHTTPServer::setwebHookUrl()
     {
-        spdlog::info("Setting up webhook...");
-        std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setWebhook?url=" + _sipeto.getFromConfigMap("webhook");
+        spdlog::info("Setting up webHookUrl...");
+        std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setwebHookUrl?url=" + _sipeto.getFromConfigMap("webHookUrl");
 
         CURL *curl;
         CURLcode res;
@@ -88,19 +88,19 @@ namespace simpleHttpServer
             }
             else
             {
-                // Check if webhook is already set
+                // Check if webHookUrl is already set
                 std::string responseString = _responseBuffer.str();
                 Json::Value responseJson;
                 Json::Reader reader;
                 if (!reader.parse(responseString, responseJson))
                 {
-                    spdlog::error("Failed to parse JSON response from getWebhookInfo");
+                    spdlog::error("Failed to parse JSON response from getwebHookUrlInfo.");
                 }
                 else
                 {
-                    bool webhookIsSet = responseJson["result"].asBool(); // == _sipeto.getFromConfigMap("webhook");
+                    bool webHookUrlIsSet = responseJson["result"].asBool(); // == _sipeto.getFromConfigMap("webHookUrl");
 
-                    if (webhookIsSet)
+                    if (webHookUrlIsSet)
                     {
                         spdlog::info("{}.", responseJson["description"].asString());
                         return;
