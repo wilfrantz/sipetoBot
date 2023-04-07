@@ -110,9 +110,10 @@ namespace sipeto
         return errorString;
     }
 
-    /// @brief Welcome message
-    /// @param none.
-    /// @return none.
+    /// @brief: Define a function to start the server
+    /// Handle a request and produce a reply.
+    /// @param address[in] address of the request
+    /// @param port[in] port of the request
     void Sipeto::startServer()
     {
         greetings();
