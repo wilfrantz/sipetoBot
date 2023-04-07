@@ -6,9 +6,11 @@ namespace simpleHttpServer
                                        const std::string &port)
         : _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))}),
           _sipeto(sipeto::Sipeto())
+
     {
-        // createSession();
+        createSession();
         curl_global_init(CURL_GLOBAL_DEFAULT);
+        _acceptor.set_option(boost::asio::socket_base::reuse_address(true));
     }
 
     void SimpleHTTPServer::start()
@@ -70,7 +72,6 @@ namespace simpleHttpServer
     {
         spdlog::info("Setting up webHookUrl...");
         std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setwebHookUrl?url=" + _sipeto.getFromConfigMap("webHookUrl") + "&webhook_use_self_signed=true";
-        spdlog::info("url: {}", url);
 
         CURL *curl;
         CURLcode res;
