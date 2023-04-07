@@ -4,10 +4,11 @@ namespace simpleHttpServer
 {
     SimpleHTTPServer::SimpleHTTPServer(const std::string &address,
                                        const std::string &port)
-        : _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))})
+        : _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))}),
+          _sipeto(sipeto::Sipeto())
     {
         // createSession();
-        // curl_global_init(CURL_GLOBAL_DEFAULT);
+        curl_global_init(CURL_GLOBAL_DEFAULT);
     }
 
     void SimpleHTTPServer::start()
@@ -97,10 +98,11 @@ namespace simpleHttpServer
                 }
                 else
                 {
-                    bool webhookIsSet = responseJson["result"]["url"].asString() == _sipeto.getFromConfigMap(" webhook");
+                    bool webhookIsSet = responseJson["result"].asBool(); // == _sipeto.getFromConfigMap("webhook");
+
                     if (webhookIsSet)
                     {
-                        spdlog::info("Webhook is already set.");
+                        spdlog::info("{}", responseJson["description"].asString());
                         return;
                     }
                 }

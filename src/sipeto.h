@@ -22,7 +22,8 @@ namespace sipeto
         std::string processRequest(const std::string &requestBody);
         const std::string &getFromConfigMap(const std::string &key);
         std::shared_ptr<spdlog::logger> getLogger() const { return _logger; }
-        void startServer(const std::string &address, const std::string &port);
+        // void startServer(const std::string &address, const std::string &port);
+        void startServer();
         void handleRequest(http::request<http::string_body> &&req, tcp::socket &socket);
 
         std::string receivedUpdate{};

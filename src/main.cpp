@@ -11,8 +11,7 @@ int main(int argc, char **argv)
 
     sipeto::Sipeto sipeto;
     std::thread{[&sipeto]
-                { sipeto.startServer(sipeto.getFromConfigMap("address"),
-                                     sipeto.getFromConfigMap("port")); }}
+                { sipeto.startServer(); }}
         .detach();
 
     // Wait for an update to be received

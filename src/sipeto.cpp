@@ -9,7 +9,8 @@ namespace sipeto
 
     Sipeto::Sipeto() : _configFile("sipeto_config.json")
     {
-        setConfig();
+        setConfig(); // load the config file in the _config map.
+
         _logger = spdlog::get(getFromConfigMap("project"));
         if (!_logger)
         {
@@ -89,17 +90,6 @@ namespace sipeto
         }
     }
 
-    // Update the handle_request function
-    void Sipeto::handleRequest(http::request<http::string_body> &&req, tcp::socket &socket)
-    {
-        // Extract update from request body and update receivedUpdate variable
-        {
-            std::unique_lock<std::mutex> lock(receivedUpdateMutex);
-            receivedUpdate = req.body();
-        }
-
-        /// TODO: ... (rest of the function)
-    }
 
     /// @brief Read from the config file
     /// @param key[in] The key to read from the config file.
@@ -124,9 +114,12 @@ namespace sipeto
     /// Handle a request and produce a reply.
     ///@param address[in] address of the request
     ///@param port[in] port of the request
-    void Sipeto::startServer(const std::string &address, const std::string &port)
+    void Sipeto::startServer()
     {
         greetings();
+
+        const std::string &port = getFromConfigMap("port");
+        const std::string &address = getFromConfigMap("address");
 
         spdlog::info("Starting server {}:{}", address, port);
 
@@ -160,9 +153,28 @@ namespace sipeto
         catch (const std::exception &e)
         {
             spdlog::info("Error starting server: {}", e.what());
+            exit(1);
         }
     }
 
+    /// @brief: Define a function to handle the request
+    /// @param req[in] request
+    /// @param socket[in] socket
+    /// @return none.
+    void Sipeto::handleRequest(http::request<http::string_body> &&req, tcp::socket &socket)
+    {
+        // Extract update from request body and update receivedUpdate variable
+        {
+            std::unique_lock<std::mutex> lock(receivedUpdateMutex);
+            receivedUpdate = req.body();
+        }
+
+        /// TODO: ... (rest of the function)
+    }
+
+    /// @brief  Process the request body and return the response body
+    /// @param requestBody 
+    /// @return none.
     std::string Sipeto::processRequest(const std::string &requestBody)
     {
         // Perform any processing you need based on the request body
@@ -189,6 +201,9 @@ namespace sipeto
         _logger->debug("Message sent.");
     }
 
+    /// @brief Welcome message
+    /// @param none.
+    /// @return none.
     void Sipeto::greetings()
     {
 
@@ -199,6 +214,8 @@ namespace sipeto
 
         _logger->debug("Developed by: {}.", getFromConfigMap("author"));
     }
+
+
     void Sipeto::processTelegramUpdate(const Json::Value &update)
     {
         /// TODO: Implement logic to handle different types of updates
