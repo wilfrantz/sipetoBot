@@ -115,7 +115,6 @@ namespace sipeto
     /// @return none.
     void Sipeto::displayGreetings()
     {
-
         spdlog::info("Welcome to {} {}.",
                      getFromConfigMap("project"),
                      getFromConfigMap("version"));

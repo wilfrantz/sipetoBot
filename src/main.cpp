@@ -6,8 +6,8 @@ namespace http = boost::beast::http;
 
 int main(int argc, char **argv)
 {
-    simpleHttpServer::SimpleHTTPServer server;
-    server.setwebHookUrl();
+    // simpleHttpServer::SimpleHTTPServer server;
+    // server.setwebHookUrl();
 
     sipeto::Sipeto sipeto;
     std::thread{[&sipeto]
