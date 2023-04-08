@@ -131,11 +131,12 @@ namespace sipeto
     {
         const std::string &port = getFromConfigMap("port");
         const std::string &address = getFromConfigMap("address");
+        unsigned int numThreads = std::thread::hardware_concurrency();
 
         try
         {
-            // Create an io_context object with a single worker thread
-            boost::asio::io_context ioc{1};
+            // Create an io_context object with multiple worker threads
+            boost::asio::io_context ioc{static_cast<int>(numThreads)};
 
             // Resolve the endpoint and set reuse_address option
             boost::asio::ip::tcp::resolver resolver(ioc);
@@ -155,29 +156,18 @@ namespace sipeto
 
             // Start accepting incoming connections
             spdlog::info("[Server started] {}:{}", address, port);
-            while (true)
+            std::vector<std::thread> threadPool;
+            threadPool.reserve(numThreads);
+            for (size_t i = 0; i < numThreads; ++i)
             {
-                // Create a TCP socket object
-                tcp::socket socket{ioc};
+                threadPool.emplace_back([&ioc, this]
+                                        { ioc.run(); });
+            }
 
-                // Accept a connection
-                acceptor.accept(socket);
-
-                // Create a new thread to handle the request
-                std::thread{[this](tcp::socket &socket)
-                            {
-                                try{
-                                http::request<http::string_body> req;
-                                handleRequest(std::move(req), socket);
-                                }
-                                catch (const std::exception &e)
-                                {
-                                    spdlog::info("Error handling request: {}", e.what());
-                                }
-                            },
-                            std::ref(socket)}
-                    .detach();
-                    spdlog::info("New thread created");
+            // Wait for all threads in the thread pool to finish
+            for (auto &thread : threadPool)
+            {
+                thread.join();
             }
         }
         catch (const std::exception &e)
@@ -186,6 +176,66 @@ namespace sipeto
             exit(1);
         }
     }
+
+    // void Sipeto::startServer()
+    // {
+    //     const std::string &port = getFromConfigMap("port");
+    //     const std::string &address = getFromConfigMap("address");
+
+    //     try
+    //     {
+    //         // Create an io_context object with a single worker thread
+    //         boost::asio::io_context ioc{1};
+
+    //         // Resolve the endpoint and set reuse_address option
+    //         boost::asio::ip::tcp::resolver resolver(ioc);
+    //         boost::asio::ip::tcp::resolver::query query(address, port, boost::asio::ip::resolver_query_base::flags::v4_mapped | boost::asio::ip::resolver_query_base::flags::numeric_service);
+    //         auto endpoints = resolver.resolve(query);
+
+    //         // Create a TCP acceptor object
+    //         tcp::acceptor acceptor{ioc, {tcp::v4(), static_cast<unsigned short>(std::atoi(port.c_str()))}};
+
+    //         // Enable reuse_address option
+    //         int fd = acceptor.native_handle();
+    //         int on = 1;
+    //         if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
+    //         {
+    //             spdlog::info("Error setting socket option: {}", strerror(errno));
+    //         }
+
+    //         // Start accepting incoming connections
+    //         spdlog::info("[Server started] {}:{}", address, port);
+    //         while (true)
+    //         {
+    //             // Create a TCP socket object
+    //             tcp::socket socket{ioc};
+
+    //             // Accept a connection
+    //             acceptor.accept(socket);
+
+    //             // Create a new thread to handle each request
+    //             std::thread{[this](tcp::socket &socket)
+    //                         {
+    //                             try{
+    //                             http::request<http::string_body> req;
+    //                             handleRequest(std::move(req), socket);
+    //                             }
+    //                             catch (const std::exception &e)
+    //                             {
+    //                                 spdlog::info("Error handling request: {}", e.what());
+    //                             }
+    //                         },
+    //                         std::ref(socket)}
+    //                 .detach();
+    //             this->getLogger()->debug("New thread created");
+    //         }
+    //     }
+    //     catch (const std::exception &e)
+    //     {
+    //         spdlog::info("Error starting server: {}", e.what());
+    //         exit(1);
+    //     }
+    // }
 
     /// @brief: Define a function to handle the request
     /// @param req[in] request
