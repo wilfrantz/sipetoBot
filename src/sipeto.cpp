@@ -232,4 +232,66 @@ namespace sipeto
         // and send appropriate responses using the Telegram Bot API
     }
 
+    /// @brief  set up a webHookUrl for Telegram bot
+    /// @param none
+    /// @return none
+    /* NOTE: Once a webHookUrl has been set up for
+     * a Telegram bot, it does not need to be set
+     * up again unless there is a change the URL or disable the webHookUrl.
+     * TODO: check if the webHookUrl is already set */
+    void Sipeto::setWebHookUrl()
+    {
+        spdlog::info("Setting up webHookUrl...");
+        std::string url = getFromConfigMap("endpoint") + getFromConfigMap("token") + "/setwebHookUrl?url=" + getFromConfigMap("webHookUrl") + "&webhook_use_self_signed=true";
+
+        CURL *curl;
+        CURLcode res;
+        curl = curl_easy_init();
+        if (curl)
+        {
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->writeCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &_responseBuffer);
+
+            res = curl_easy_perform(curl);
+
+            if (res != CURLE_OK)
+            {
+                spdlog::error("curl_easy_perform() failed: {}", curl_easy_strerror(res));
+            }
+            else
+            {
+                // Check if webHookUrl is already set
+                std::string responseString = _responseBuffer.str();
+                Json::Value responseJson;
+                Json::Reader reader;
+                if (!reader.parse(responseString, responseJson))
+                {
+                    spdlog::error("Failed to parse JSON response from getwebHookUrlInfo.");
+                }
+                else
+                {
+                    bool webHookUrlIsSet = responseJson["result"].asBool(); // == _sipeto.getFromConfigMap("webHookUrl");
+
+                    if (webHookUrlIsSet)
+                    {
+                        spdlog::info("{}.", responseJson["description"].asString());
+                        return;
+                    }
+                }
+            }
+        }
+        else
+        {
+            spdlog::error("curl_easy_init() failed: {}", curl_easy_strerror(res));
+        }
+    }
+
+    size_t Sipeto::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
+    {
+        size_t realsize = size * nmemb;
+        std::stringstream *responseBuffer = (std::stringstream *)userdata;
+        responseBuffer->write(ptr, realsize);
+        return realsize;
+    }
 } // !namespace sipeto

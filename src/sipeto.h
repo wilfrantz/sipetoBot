@@ -19,7 +19,7 @@ namespace sipeto
         void returnMedia();
         void startServer();
         void displayGreetings();
-        bool isServerRunning = false;
+        void setWebHookUrl();
         void processTelegramUpdate(const Json::Value &update);
         std::string processRequest(const std::string &requestBody);
         const std::string &getFromConfigMap(const std::string &key);
@@ -28,12 +28,15 @@ namespace sipeto
         boost::asio::ip::tcp::resolver::results_type resolveEndpoints(boost::asio::io_context &ioc, const std::string &address, const std::string &port);
         tcp::acceptor createAcceptor(boost::asio::io_context &ioc, const boost::asio::ip::tcp::resolver::results_type &endpoints);
         void acceptConnections(boost::asio::io_context &ioc, tcp::acceptor &acceptor, const std::string &address, const std::string &port);
+        static size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata);
 
         std::string receivedUpdate{};
         std::mutex receivedUpdateMutex;
 
         std::mutex updateMutex;
+        bool isServerRunning = false;
         bool updateAvailable = false;
+        std::stringstream _responseBuffer;
         std::condition_variable updateReceived;
 
         ~Sipeto() = default;

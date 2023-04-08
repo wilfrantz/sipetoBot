@@ -9,6 +9,7 @@ int main(int argc, char **argv)
     sipeto::Sipeto sipeto;
     // Display welcome message
     sipeto.displayGreetings();
+    sipeto.setWebHookUrl();
 
     // start the server
     std::thread serverThread{[&sipeto]
