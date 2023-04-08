@@ -156,6 +156,7 @@ namespace sipeto
 
             // Start accepting incoming connections
             spdlog::info("[Server started] {}:{}", address, port);
+            isServerRunning = true;
             std::vector<std::thread> threadPool;
             threadPool.reserve(numThreads);
             for (size_t i = 0; i < numThreads; ++i)

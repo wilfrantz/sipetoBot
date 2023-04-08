@@ -16,9 +16,10 @@ namespace sipeto
 
         void setConfig();
         void readInput();
-        void displayGreetings();
         void returnMedia();
         void startServer();
+        void displayGreetings();
+        bool isServerRunning = false;
         void processTelegramUpdate(const Json::Value &update);
         std::string processRequest(const std::string &requestBody);
         const std::string &getFromConfigMap(const std::string &key);
