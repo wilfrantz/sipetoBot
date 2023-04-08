@@ -129,8 +129,6 @@ namespace sipeto
     ///@param port[in] port of the request
     void Sipeto::startServer()
     {
-        displayGreetings();
-
         const std::string &port = getFromConfigMap("port");
         const std::string &address = getFromConfigMap("address");
 
@@ -168,11 +166,18 @@ namespace sipeto
                 // Create a new thread to handle the request
                 std::thread{[this](tcp::socket &socket)
                             {
+                                try{
                                 http::request<http::string_body> req;
                                 handleRequest(std::move(req), socket);
+                                }
+                                catch (const std::exception &e)
+                                {
+                                    spdlog::info("Error handling request: {}", e.what());
+                                }
                             },
                             std::ref(socket)}
                     .detach();
+                    spdlog::info("New thread created");
             }
         }
         catch (const std::exception &e)

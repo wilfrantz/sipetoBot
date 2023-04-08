@@ -10,6 +10,9 @@ int main(int argc, char **argv)
     // server.setwebHookUrl();
 
     sipeto::Sipeto sipeto;
+
+    sipeto.displayGreetings();
+
     std::thread{[&sipeto]
                 { sipeto.startServer(); }}
         .detach();
@@ -19,6 +22,7 @@ int main(int argc, char **argv)
     while (sipeto.receivedUpdate.empty())
     {
         sipeto.updateReceived.wait(lock);
+        spdlog::info("Waiting for update...");
     }
 
     // Print the received update
