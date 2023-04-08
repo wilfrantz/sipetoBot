@@ -177,72 +177,14 @@ namespace sipeto
         }
     }
 
-    // void Sipeto::startServer()
-    // {
-    //     const std::string &port = getFromConfigMap("port");
-    //     const std::string &address = getFromConfigMap("address");
-
-    //     try
-    //     {
-    //         // Create an io_context object with a single worker thread
-    //         boost::asio::io_context ioc{1};
-
-    //         // Resolve the endpoint and set reuse_address option
-    //         boost::asio::ip::tcp::resolver resolver(ioc);
-    //         boost::asio::ip::tcp::resolver::query query(address, port, boost::asio::ip::resolver_query_base::flags::v4_mapped | boost::asio::ip::resolver_query_base::flags::numeric_service);
-    //         auto endpoints = resolver.resolve(query);
-
-    //         // Create a TCP acceptor object
-    //         tcp::acceptor acceptor{ioc, {tcp::v4(), static_cast<unsigned short>(std::atoi(port.c_str()))}};
-
-    //         // Enable reuse_address option
-    //         int fd = acceptor.native_handle();
-    //         int on = 1;
-    //         if (::setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on)) < 0)
-    //         {
-    //             spdlog::info("Error setting socket option: {}", strerror(errno));
-    //         }
-
-    //         // Start accepting incoming connections
-    //         spdlog::info("[Server started] {}:{}", address, port);
-    //         while (true)
-    //         {
-    //             // Create a TCP socket object
-    //             tcp::socket socket{ioc};
-
-    //             // Accept a connection
-    //             acceptor.accept(socket);
-
-    //             // Create a new thread to handle each request
-    //             std::thread{[this](tcp::socket &socket)
-    //                         {
-    //                             try{
-    //                             http::request<http::string_body> req;
-    //                             handleRequest(std::move(req), socket);
-    //                             }
-    //                             catch (const std::exception &e)
-    //                             {
-    //                                 spdlog::info("Error handling request: {}", e.what());
-    //                             }
-    //                         },
-    //                         std::ref(socket)}
-    //                 .detach();
-    //             this->getLogger()->debug("New thread created");
-    //         }
-    //     }
-    //     catch (const std::exception &e)
-    //     {
-    //         spdlog::info("Error starting server: {}", e.what());
-    //         exit(1);
-    //     }
-    // }
-
     /// @brief: Define a function to handle the request
     /// @param req[in] request
     /// @param socket[in] socket
     /// @return none.
     void Sipeto::handleRequest(http::request<http::string_body> &&req, tcp::socket &socket)
     {
+        spdlog::info("Received request from: {}",
+                     socket.remote_endpoint().address().to_string());
         // Extract update from request body and update receivedUpdate variable
         {
             std::unique_lock<std::mutex> lock(receivedUpdateMutex);
@@ -257,6 +199,7 @@ namespace sipeto
     /// @return none.
     std::string Sipeto::processRequest(const std::string &requestBody)
     {
+        spdlog::info("Processing request: {}", requestBody);
         // Perform any processing you need based on the request body
         // For example, parsing JSON data, interacting with a database, or calling other methods in the Sipeto class
 

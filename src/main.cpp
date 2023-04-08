@@ -6,13 +6,11 @@ namespace http = boost::beast::http;
 
 int main(int argc, char **argv)
 {
-    // simpleHttpServer::SimpleHTTPServer server;
-    // server.setwebHookUrl();
-
     sipeto::Sipeto sipeto;
-
+    // Display welcome message
     sipeto.displayGreetings();
 
+    // start the server
     std::thread{[&sipeto]
                 { sipeto.startServer(); }}
         .detach();
@@ -25,8 +23,9 @@ int main(int argc, char **argv)
         spdlog::info("Waiting for update...");
     }
 
-    // Print the received update
-    spdlog::info("Received update: {}", sipeto.receivedUpdate);
+    // Process the received update
+    std::string responseBody = sipeto.processRequest(sipeto.receivedUpdate);
+    spdlog::info("Received update: {}", responseBody);
 
     return 0;
 }
