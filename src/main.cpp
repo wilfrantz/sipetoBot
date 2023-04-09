@@ -10,7 +10,7 @@ int main(int argc, char **argv)
     SimpleHttpServer httpServer(sipeto);
 
     // Display welcome message
-    sipeto.displayGreetings();
+    sipeto.displayProgramInfo();
 
     // Start the server
     httpServer.start();

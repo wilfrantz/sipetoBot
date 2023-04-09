@@ -1,6 +1,7 @@
 .git
 build/
 .vscode/
+docs/
 sipeto_config.json
 telegram-bot-api/
 message.json
