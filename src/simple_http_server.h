@@ -14,14 +14,16 @@ namespace simpleHttpServer
     class SimpleHttpServer
     {
     public:
-        SimpleHttpServer(const std::string &address = "localhost",
+        SimpleHttpServer(sipeto::Sipeto &sipeto,
+                         const std::string &address = "localhost",
                          const std::string &port = "8080");
 
         void start();
         void setwebHookUrl();
         void runSessionMethod();
         void handleSetWebHookUrlResponse();
-        std::unique_ptr<sipeto::Sipeto> _sipeto;
+        // std::unique_ptr<sipeto::Sipeto> _sipeto;
+        sipeto::Sipeto &_sipeto;
 
         ~SimpleHttpServer()
         {

@@ -6,9 +6,10 @@ namespace simpleHttpServer
     /// @brief simple http server constructor
     /// @param address of the server
     /// @param port to listen on
-    SimpleHttpServer::SimpleHttpServer(const std::string &address,
+    SimpleHttpServer::SimpleHttpServer(sipeto::Sipeto &sipeto,
+                                       const std::string &address,
                                        const std::string &port)
-        : _sipeto(std::make_unique<sipeto::Sipeto>()),
+        : _sipeto(sipeto),
           _port(port),
           _address(address)
     {
@@ -70,7 +71,7 @@ namespace simpleHttpServer
         _acceptor->accept(socket);
 
         // Create a new Session instance with the connected socket and the _sipeto instance
-        auto session = std::make_shared<Session>(std::move(socket), *_sipeto, *_acceptor);
+        auto session = std::make_shared<Session>(std::move(socket), _sipeto, *_acceptor);
 
         // Store the session in the _sessions vector
         _sessions.push_back(session);
@@ -110,17 +111,17 @@ namespace simpleHttpServer
     void SimpleHttpServer::setwebHookUrl()
     {
         spdlog::info("Setting up webHookUrl...");
-        if (!_sipeto)
-        {
-            spdlog::error("Cannot set webHookUrl: Sipeto object is not initialized");
-            return;
-        }
+        // if (!_sipeto)
+        // {
+        //     spdlog::error("Cannot set webHookUrl: Sipeto object is not initialized");
+        //     return;
+        // }
 
         // set up the webHook url string.
-        std::string url = _sipeto->getFromConfigMap("endpoint");
-        url += _sipeto->getFromConfigMap("token");
+        std::string url = _sipeto.getFromConfigMap("endpoint");
+        url += _sipeto.getFromConfigMap("token");
         url += "/setwebHookUrl?url=";
-        url += _sipeto->getFromConfigMap("webHookUrl");
+        url += _sipeto.getFromConfigMap("webHookUrl");
         url += "&webhook_use_self_signed=true";
 
         CURL *curl = curl_easy_init();
