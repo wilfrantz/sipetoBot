@@ -1,15 +1,13 @@
 
 #include "sipeto.h"
 
-using tcp = boost::asio::ip::tcp;
-namespace http = boost::beast::http;
+using namespace sipeto;
+using namespace simpleHttpServer;
 
 int main(int argc, char **argv)
 {
-    sipeto::Sipeto sipeto;
-    simpleHttpServer::SimpleHttpServer httpServer(sipeto,
-                                                  sipeto.getFromConfigMap("address"),
-                                                  sipeto.getFromConfigMap("port"));
+    Sipeto sipeto;
+    SimpleHttpServer httpServer(sipeto);
 
     // Display welcome message
     sipeto.displayGreetings();
