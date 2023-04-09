@@ -58,7 +58,8 @@ namespace simpleHttpServer
 
         std::string _port;
         std::string _address;
-        tcp::acceptor _acceptor;
+        // tcp::acceptor _acceptor;
+        std::unique_ptr<tcp::acceptor> _acceptor;
         boost::asio::io_context _ioc{1};
         std::vector<std::shared_ptr<Session>> _sessions;
         static size_t writeCallback(char *ptr, size_t size,

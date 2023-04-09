@@ -9,13 +9,32 @@ namespace simpleHttpServer
     SimpleHttpServer::SimpleHttpServer(const std::string &address,
                                        const std::string &port)
         : _sipeto(std::make_unique<sipeto::Sipeto>()),
-          _port(_sipeto->getFromConfigMap("port")),
-          _address(_sipeto->getFromConfigMap("address")),
-          _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))})
+          _port(port),
+          _address(address)
     {
         spdlog::info("SimpleHttpServer::SimpleHttpServer()");
         curl_global_init(CURL_GLOBAL_DEFAULT);
-        _acceptor.set_option(boost::asio::socket_base::reuse_address(true));
+
+        unsigned short port_number;
+        try
+        {
+            port_number = static_cast<unsigned short>(std::stoi(port));
+        }
+        catch (const std::invalid_argument &e)
+        {
+            spdlog::error("Invalid port number: {}", port);
+            // Handle error or throw an exception.
+            throw std::invalid_argument("Invalid port number");
+        }
+        catch (const std::out_of_range &e)
+        {
+            spdlog::error("Port number out of range: {}", port);
+            // Handle error or throw an exception.
+            throw std::out_of_range("Port number out of range");
+        }
+
+        _acceptor = std::make_unique<tcp::acceptor>(_ioc, tcp::endpoint(tcp::v4(), port_number));
+        _acceptor->set_option(boost::asio::socket_base::reuse_address(true));
     }
 
     /// @brief  start http server
@@ -48,10 +67,10 @@ namespace simpleHttpServer
         tcp::socket socket{_ioc};
 
         // Accept a connection
-        _acceptor.accept(socket);
+        _acceptor->accept(socket);
 
         // Create a new Session instance with the connected socket and the _sipeto instance
-        auto session = std::make_shared<Session>(std::move(socket), *_sipeto, _acceptor);
+        auto session = std::make_shared<Session>(std::move(socket), *_sipeto, *_acceptor);
 
         // Store the session in the _sessions vector
         _sessions.push_back(session);
