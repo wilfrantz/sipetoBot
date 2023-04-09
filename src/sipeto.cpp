@@ -4,12 +4,13 @@ namespace sipeto
 {
     std::shared_ptr<spdlog::logger> Sipeto::_logger = spdlog::stdout_color_mt("console");
 
-    // Global variable to hold the received update
-    // std::atomic<std::string> receivedUpdate("");
-
-    Sipeto::Sipeto() : _configFile("sipeto_config.json")
+    Sipeto::Sipeto(const std::string &configFIle) : _configFile(configFIle)
     {
-        setConfig(); // load the config file in the _config map.
+
+        if (!configFIle.empty())
+        {
+            setConfig();
+        }
 
         _logger = spdlog::get(getFromConfigMap("project"));
         if (!_logger)
@@ -101,10 +102,11 @@ namespace sipeto
         {
             return _config.at(key);
         }
-        catch (const std::out_of_range &e)
+        catch (const std::out_of_range &)
         {
-            _logger->error("Error retrieving key: {} from config file: {}", key, e.what());
-            return errorString = "Error retrieving " + key + "from config file";
+            _logger->error("Error retrieving key: {} from config file.", key);
+            static const std::string errorString = "Error retrieving " + key + " from config file";
+            return errorString;
             exit(1);
         }
         return errorString;
@@ -131,6 +133,7 @@ namespace sipeto
     {
         const std::string &port = getFromConfigMap("port");
         const std::string &address = getFromConfigMap("address");
+
         unsigned int numThreads = std::thread::hardware_concurrency();
 
         try
@@ -157,7 +160,9 @@ namespace sipeto
             // Start accepting incoming connections
             spdlog::info("[Server started] {}:{}", address, port);
             isServerRunning = true;
+
             std::vector<std::thread> threadPool;
+
             threadPool.reserve(numThreads);
             for (size_t i = 0; i < numThreads; ++i)
             {
@@ -212,86 +217,33 @@ namespace sipeto
         return responseBody;
     }
 
-    /// @brief:
-    void Sipeto::readInput()
-    {
-
-        // Create a JSON object representing the message to send
-        const char *send_message_json = "{\"@type\":\"sendMessage\", \"chat_id\":123456, \"input_message_content\":{\"@type\":\"inputMessageText\", \"text\":{\"@type\":\"formattedText\", \"text\":\"Hello, Telegram!\"}}}";
-
-        // Send the message using the Telegram API
-        // td_json_client_execute(nullptr, send_message_json);
-
-        _logger->debug("Message sent.");
-    }
-
     void Sipeto::processTelegramUpdate(const Json::Value &update)
     {
         /// TODO: Implement logic to handle different types of updates
         /// (e.g., messages, inline queries, etc.)
-        // and send appropriate responses using the Telegram Bot API
-    }
+        /// and send appropriate responses using the Telegram Bot API
+        /// TODO: Use switch-case instead of if-else. (map, enum)
 
-    /// @brief  set up a webHookUrl for Telegram bot
-    /// @param none
-    /// @return none
-    /* NOTE: Once a webHookUrl has been set up for
-     * a Telegram bot, it does not need to be set
-     * up again unless there is a change the URL or disable the webHookUrl.
-     * TODO: check if the webHookUrl is already set */
-    void Sipeto::setWebHookUrl()
-    {
-        spdlog::info("Setting up webHookUrl...");
-        std::string url = getFromConfigMap("endpoint") + getFromConfigMap("token") + "/setwebHookUrl?url=" + getFromConfigMap("webHookUrl") + "&webhook_use_self_signed=true";
+        // Extract update type
+        const std::string &updateType = update["update_type"].asString();
 
-        CURL *curl;
-        CURLcode res;
-        curl = curl_easy_init();
-        if (curl)
+        // handle different types of updates
+        if (updateType == "message")
         {
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, this->writeCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &_responseBuffer);
-
-            res = curl_easy_perform(curl);
-
-            if (res != CURLE_OK)
-            {
-                spdlog::error("curl_easy_perform() failed: {}", curl_easy_strerror(res));
-            }
-            else
-            {
-                // Check if webHookUrl is already set
-                std::string responseString = _responseBuffer.str();
-                Json::Value responseJson;
-                Json::Reader reader;
-                if (!reader.parse(responseString, responseJson))
-                {
-                    spdlog::error("Failed to parse JSON response from getwebHookUrlInfo.");
-                }
-                else
-                {
-                    bool webHookUrlIsSet = responseJson["result"].asBool(); // == _sipeto.getFromConfigMap("webHookUrl");
-
-                    if (webHookUrlIsSet)
-                    {
-                        spdlog::info("{}.", responseJson["description"].asString());
-                        return;
-                    }
-                }
-            }
+            // handle message update
+        }
+        else if (updateType == "callback_query")
+        {
+            // handle callback query update
+        }
+        else if (updateType == "inline_query")
+        {
+            // handle inline query update
         }
         else
         {
-            spdlog::error("curl_easy_init() failed: {}", curl_easy_strerror(res));
+            // unknown update type
         }
     }
 
-    size_t Sipeto::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
-    {
-        size_t realsize = size * nmemb;
-        std::stringstream *responseBuffer = (std::stringstream *)userdata;
-        responseBuffer->write(ptr, realsize);
-        return realsize;
-    }
 } // !namespace sipeto

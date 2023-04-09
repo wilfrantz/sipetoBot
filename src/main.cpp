@@ -1,5 +1,5 @@
 
-#include "simple_http_server.h"
+#include "sipeto.h"
 
 using tcp = boost::asio::ip::tcp;
 namespace http = boost::beast::http;
@@ -7,20 +7,20 @@ namespace http = boost::beast::http;
 int main(int argc, char **argv)
 {
     sipeto::Sipeto sipeto;
+
     // Display welcome message
     sipeto.displayGreetings();
-    sipeto.setWebHookUrl();
 
     // start the server
     std::thread serverThread{[&sipeto]
                              { sipeto.startServer(); }};
-    // .detach();
 
     // wait for the server to start
     while (!sipeto.isServerRunning)
     {
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+
     // Wait for an update to be received
     std::unique_lock<std::mutex> lock(sipeto.receivedUpdateMutex);
     while (sipeto.receivedUpdate.empty())

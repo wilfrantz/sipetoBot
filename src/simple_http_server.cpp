@@ -1,25 +1,28 @@
+#include "sipeto.h"
 #include "simple_http_server.h"
 
 namespace simpleHttpServer
 {
-    SimpleHTTPServer::SimpleHTTPServer(const std::string &address,
-                                       const std::string &port)
-        : _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))}),
-          _sipeto(sipeto::Sipeto())
 
+    SimpleHttpServer::SimpleHttpServer(const std::string &address,
+                                       const std::string &port)
+        : _sipeto(new sipeto::Sipeto()),
+          _port(_sipeto->getFromConfigMap("port")),
+          _address(_sipeto->getFromConfigMap("address")),
+          _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))})
     {
-        createSession();
+        // createSession();
         curl_global_init(CURL_GLOBAL_DEFAULT);
         _acceptor.set_option(boost::asio::socket_base::reuse_address(true));
     }
 
-    void SimpleHTTPServer::start()
+    void SimpleHttpServer::start()
     {
         createSession();
         _ioc.run();
     }
 
-    void SimpleHTTPServer::runSessionMethod()
+    void SimpleHttpServer::runSessionMethod()
     {
         for (const auto &session : _sessions)
         {
@@ -27,7 +30,7 @@ namespace simpleHttpServer
         }
     }
 
-    void SimpleHTTPServer::createSession()
+    void SimpleHttpServer::createSession()
     {
         // Create a new socket for the incoming connection
         tcp::socket socket{_ioc};
@@ -36,7 +39,7 @@ namespace simpleHttpServer
         _acceptor.accept(socket);
 
         // Create a new Session instance with the connected socket and the _sipeto instance
-        auto session = std::make_shared<Session>(std::move(socket), _sipeto, _acceptor);
+        auto session = std::make_shared<Session>(std::move(socket), *_sipeto, _acceptor);
 
         // Store the session in the _sessions vector
         _sessions.push_back(session);
@@ -45,15 +48,15 @@ namespace simpleHttpServer
         session->start();
     }
 
-    SimpleHTTPServer::Session::Session(tcp::socket socket, sipeto::Sipeto &sipeto, tcp::acceptor &acceptor)
+    SimpleHttpServer::Session::Session(tcp::socket socket, sipeto::Sipeto &sipeto, tcp::acceptor &acceptor)
         : _socket(std::move(socket)), _sipeto(sipeto), _acceptor(acceptor) {}
 
-    void SimpleHTTPServer::Session::start()
+    void SimpleHttpServer::Session::start()
     {
         readRequest();
     }
 
-    size_t SimpleHTTPServer::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
+    size_t SimpleHttpServer::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     {
         size_t realsize = size * nmemb;
         std::stringstream *responseBuffer = (std::stringstream *)userdata;
@@ -64,59 +67,70 @@ namespace simpleHttpServer
     /// @brief  set up a webHookUrl for Telegram bot
     /// @param none
     /// @return none
-    /* NOTE: Once a webHookUrl has been set up for
-     * a Telegram bot, it does not need to be set
-     * up again unless there is a change the URL or disable the webHookUrl.
-     * TODO: check if the webHookUrl is already set */
-    void SimpleHTTPServer::setwebHookUrl()
+    /// NOTE: webHookUrl needs to be set up only once.
+    void SimpleHttpServer::setwebHookUrl()
     {
         spdlog::info("Setting up webHookUrl...");
-        std::string url = _sipeto.getFromConfigMap("endpoint") + _sipeto.getFromConfigMap("token") + "/setwebHookUrl?url=" + _sipeto.getFromConfigMap("webHookUrl") + "&webhook_use_self_signed=true";
-
-        CURL *curl;
-        CURLcode res;
-        curl = curl_easy_init();
-        if (curl)
+        if (!_sipeto)
         {
-            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
-            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &SimpleHTTPServer::writeCallback);
-            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &_responseBuffer);
+            spdlog::error("Cannot set webHookUrl: Sipeto object is not initialized");
+            return;
+        }
 
-            res = curl_easy_perform(curl);
+        // set up the webHook url string.
+        std::string url = _sipeto->getFromConfigMap("endpoint");
+        url += _sipeto->getFromConfigMap("token");
+        url += "/setwebHookUrl?url=";
+        url += _sipeto->getFromConfigMap("webHookUrl");
+        url += "&webhook_use_self_signed=true";
 
-            if (res != CURLE_OK)
-            {
-                spdlog::error("curl_easy_perform() failed: {}", curl_easy_strerror(res));
-            }
-            else
-            {
-                // Check if webHookUrl is already set
-                std::string responseString = _responseBuffer.str();
-                Json::Value responseJson;
-                Json::Reader reader;
-                if (!reader.parse(responseString, responseJson))
-                {
-                    spdlog::error("Failed to parse JSON response from getwebHookUrlInfo.");
-                }
-                else
-                {
-                    bool webHookUrlIsSet = responseJson["result"].asBool(); // == _sipeto.getFromConfigMap("webHookUrl");
+        CURL *curl = curl_easy_init();
+        if (!curl)
+        {
+            spdlog::error("Failed to initialize curl");
+            return;
+        }
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &SimpleHttpServer::writeCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &_responseBuffer);
 
-                    if (webHookUrlIsSet)
-                    {
-                        spdlog::info("{}.", responseJson["description"].asString());
-                        return;
-                    }
-                }
-            }
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK)
+        {
+            spdlog::error("curl_easy_perform() failed: {}", curl_easy_strerror(res));
         }
         else
         {
-            spdlog::error("curl_easy_init() failed: {}", curl_easy_strerror(res));
+            handleSetWebHookUrlResponse();
         }
     }
 
-    void SimpleHTTPServer::Session::acceptConnections()
+    /// @brief process the response from setwebHookUrl
+    /// @param none
+    /// @return none
+    void SimpleHttpServer::handleSetWebHookUrlResponse()
+    {
+        std::string responseString = _responseBuffer.str();
+        Json::Value responseJson;
+        Json::Reader reader;
+        if (!reader.parse(responseString, responseJson))
+        {
+            spdlog::error("Failed to parse JSON response from setwebHookUrl");
+            return;
+        }
+
+        bool webHookUrlIsSet = responseJson["result"].asBool();
+        if (webHookUrlIsSet)
+        {
+            spdlog::info("WebHookUrl set successfully: {}", responseJson["description"].asString());
+        }
+        else
+        {
+            spdlog::error("Failed to set WebHookUrl: {}", responseJson["description"].asString());
+        }
+    }
+
+    void SimpleHttpServer::Session::acceptConnections()
     {
         _acceptor.async_accept(
             [this](std::error_code ec, tcp::socket socket)
@@ -129,7 +143,7 @@ namespace simpleHttpServer
             });
     }
 
-    void SimpleHTTPServer::Session::readRequest()
+    void SimpleHttpServer::Session::readRequest()
     {
         auto self = shared_from_this();
         http::async_read(_socket, _buffer, _req,
@@ -142,7 +156,7 @@ namespace simpleHttpServer
                          });
     }
 
-    void SimpleHTTPServer::Session::handleRequest()
+    void SimpleHttpServer::Session::handleRequest()
     {
         // Check if the incoming request is a Telegram bot update
         // if (_req.target() == _sipeto.getFromConfigMap("token"))
@@ -168,7 +182,7 @@ namespace simpleHttpServer
         }
     }
 
-    void SimpleHTTPServer::Session::writeResponse()
+    void SimpleHttpServer::Session::writeResponse()
     {
         auto self = shared_from_this();
         http::async_write(_socket, _res,
@@ -181,7 +195,7 @@ namespace simpleHttpServer
                           });
     }
 
-    void SimpleHTTPServer::Session::processTelegramUpdate()
+    void SimpleHttpServer::Session::processTelegramUpdate()
     {
         // Parse the request body as JSON
         Json::CharReaderBuilder builder;

@@ -24,6 +24,9 @@ add_executable(${PROJECT_NAME}
 
 set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk)
 
+# Set the build type to Debug
+set(CMAKE_BUILD_TYPE Debug)
+
 if (UNIX AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE
         fmt::fmt

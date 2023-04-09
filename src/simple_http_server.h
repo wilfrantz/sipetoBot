@@ -2,24 +2,31 @@
 #ifndef SIMPLE_HTTP_SERVER_H
 #define SIMPLE_HTTP_SERVER_H
 
-#include "sipeto.h"
-
-using tcp = boost::asio::ip::tcp;
-namespace http = boost::beast::http;
-
+#include "header.h"
+namespace sipeto
+{
+    class Sipeto;
+}
 namespace simpleHttpServer
 {
-    class SimpleHTTPServer
+    using tcp = boost::asio::ip::tcp;
+    namespace http = boost::beast::http;
+    class SimpleHttpServer
     {
     public:
-        SimpleHTTPServer(const std::string &address = "localhost",
-                         const std::string &port = "443");
+        SimpleHttpServer(const std::string &address = "localhost",
+                         const std::string &port = "8080");
 
         void start();
         void setwebHookUrl();
         void runSessionMethod();
+        void handleSetWebHookUrlResponse();
+        // std::shared_ptr<sipeto::Sipeto> getSipeto() const { return _sipeto; }
 
-        ~SimpleHTTPServer() { curl_global_cleanup(); }
+        ~SimpleHttpServer()
+        {
+            curl_global_cleanup();
+        }
 
     private:
         class Session : public std::enable_shared_from_this<Session>
@@ -49,12 +56,14 @@ namespace simpleHttpServer
         void createSession();
         std::stringstream _responseBuffer;
 
-        sipeto::Sipeto _sipeto;
-        boost::asio::io_context _ioc{1};
+        std::string _port;
+        std::string _address;
+        sipeto::Sipeto *_sipeto;
         tcp::acceptor _acceptor;
+        boost::asio::io_context _ioc{1};
         std::vector<std::shared_ptr<Session>> _sessions;
         static size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata);
     };
 
-} // !namespace simpleHttpServer
+} // !namespace SimpleHttpServer
 #endif // !SIMPLE_HTTP_SERVER_H
