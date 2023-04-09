@@ -21,7 +21,7 @@ namespace simpleHttpServer
         void setwebHookUrl();
         void runSessionMethod();
         void handleSetWebHookUrlResponse();
-        // std::shared_ptr<sipeto::Sipeto> getSipeto() const { return _sipeto; }
+        std::unique_ptr<sipeto::Sipeto> _sipeto;
 
         ~SimpleHttpServer()
         {
@@ -58,11 +58,11 @@ namespace simpleHttpServer
 
         std::string _port;
         std::string _address;
-        sipeto::Sipeto *_sipeto;
         tcp::acceptor _acceptor;
         boost::asio::io_context _ioc{1};
         std::vector<std::shared_ptr<Session>> _sessions;
-        static size_t writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata);
+        static size_t writeCallback(char *ptr, size_t size,
+                                    size_t nmemb, void *userdata);
     };
 
 } // !namespace SimpleHttpServer

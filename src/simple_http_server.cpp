@@ -3,25 +3,34 @@
 
 namespace simpleHttpServer
 {
-
+    /// @brief simple http server constructor
+    /// @param address of the server
+    /// @param port to listen on
     SimpleHttpServer::SimpleHttpServer(const std::string &address,
                                        const std::string &port)
-        : _sipeto(new sipeto::Sipeto()),
+        : _sipeto(std::make_unique<sipeto::Sipeto>()),
           _port(_sipeto->getFromConfigMap("port")),
           _address(_sipeto->getFromConfigMap("address")),
           _acceptor(_ioc, {tcp::v4(), static_cast<unsigned short>(std::stoi(port))})
     {
-        // createSession();
+        spdlog::info("SimpleHttpServer::SimpleHttpServer()");
         curl_global_init(CURL_GLOBAL_DEFAULT);
         _acceptor.set_option(boost::asio::socket_base::reuse_address(true));
     }
 
+    /// @brief  start http server
+    /// @param none
+    /// @return none
     void SimpleHttpServer::start()
     {
+        spdlog::info("SimpleHttpServer::start[{}:{}]", _address, _port);
         createSession();
         _ioc.run();
     }
 
+    /// @brief run the session method
+    /// @param none
+    /// @return none
     void SimpleHttpServer::runSessionMethod()
     {
         for (const auto &session : _sessions)
@@ -30,6 +39,9 @@ namespace simpleHttpServer
         }
     }
 
+    /// @brief  Create a new http session
+    /// @param none
+    /// @return none
     void SimpleHttpServer::createSession()
     {
         // Create a new socket for the incoming connection
@@ -48,14 +60,22 @@ namespace simpleHttpServer
         session->start();
     }
 
+    /// @brief Session constructor
+    /// @param socket
+    /// @param sipeto
+    /// @param acceptor
     SimpleHttpServer::Session::Session(tcp::socket socket, sipeto::Sipeto &sipeto, tcp::acceptor &acceptor)
         : _socket(std::move(socket)), _sipeto(sipeto), _acceptor(acceptor) {}
 
+    /// @brief start the session
+    /// @param none
+    /// @return none
     void SimpleHttpServer::Session::start()
     {
         readRequest();
     }
 
+    /// @brief write response from curl request
     size_t SimpleHttpServer::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     {
         size_t realsize = size * nmemb;
@@ -130,6 +150,9 @@ namespace simpleHttpServer
         }
     }
 
+    /// @brief accept connections from Telegram bot
+    /// @param none
+    /// @return none
     void SimpleHttpServer::Session::acceptConnections()
     {
         _acceptor.async_accept(
@@ -156,6 +179,9 @@ namespace simpleHttpServer
                          });
     }
 
+    /// @brief handle incoming requests from Telegram bot
+    /// @param none
+    /// @return none
     void SimpleHttpServer::Session::handleRequest()
     {
         // Check if the incoming request is a Telegram bot update
@@ -182,6 +208,9 @@ namespace simpleHttpServer
         }
     }
 
+    /// @brief write response to the client
+    /// @param none
+    /// @return none
     void SimpleHttpServer::Session::writeResponse()
     {
         auto self = shared_from_this();
@@ -195,6 +224,9 @@ namespace simpleHttpServer
                           });
     }
 
+    /// @brief process Telegram bot update
+    /// @param none
+    /// @return none
     void SimpleHttpServer::Session::processTelegramUpdate()
     {
         // Parse the request body as JSON

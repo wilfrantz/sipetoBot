@@ -41,7 +41,7 @@ namespace sipeto
         std::string _configFile{};
         std::condition_variable _requestComplete;
         std::map<std::string, std::string> _config;
-        // simpleHttpServer::SimpleHttpServer _httpServer;
+        simpleHttpServer::SimpleHttpServer _httpServer;
         static std::shared_ptr<spdlog::logger> _logger;
 
 #ifdef UNIT_TEST

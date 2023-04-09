@@ -158,7 +158,7 @@ namespace sipeto
             }
 
             // Start accepting incoming connections
-            spdlog::info("[Server started] {}:{}", address, port);
+            spdlog::info("Sipeto started [{}:{}]", address, port);
             isServerRunning = true;
 
             std::vector<std::thread> threadPool;
@@ -178,7 +178,7 @@ namespace sipeto
         }
         catch (const std::exception &e)
         {
-            spdlog::info("Error starting server: {}", e.what());
+            spdlog::info("Error starting sipeto server: {}", e.what());
             exit(1);
         }
     }
