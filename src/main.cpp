@@ -9,7 +9,7 @@ int main(int argc, char **argv)
     sipeto::Sipeto sipeto;
     simpleHttpServer::SimpleHttpServer httpServer(sipeto,
                                                   sipeto.getFromConfigMap("address"),
-                                                  sipeto.getFromConfigMap("http_port"));
+                                                  sipeto.getFromConfigMap("port"));
 
     // Display welcome message
     sipeto.displayGreetings();
