@@ -131,9 +131,8 @@ namespace sipeto
     ///@param port[in] port of the request
     void Sipeto::startServer()
     {
-        const std::string &port = getFromConfigMap("port");
+        const std::string &port = getFromConfigMap("sipeto_port");
         const std::string &address = getFromConfigMap("address");
-        simpleHttpServer::SimpleHttpServer _httpServer(address, port);
 
         unsigned int numThreads = std::thread::hardware_concurrency();
 

@@ -12,7 +12,7 @@ namespace simpleHttpServer
           _port(port),
           _address(address)
     {
-        spdlog::info("SimpleHttpServer::SimpleHttpServer()");
+        // spdlog::info("SimpleHttpServer::SimpleHttpServer({}, {})", address, port);
         curl_global_init(CURL_GLOBAL_DEFAULT);
 
         unsigned short port_number;
