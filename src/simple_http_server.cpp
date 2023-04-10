@@ -37,7 +37,7 @@ namespace simpleHttpServer
 
     void SimpleHttpServer::start()
     {
-        spdlog::info("SimpleHttpServer::start[{}:{}]", _address, _port);
+        spdlog::info("SimpleHttpServer Start [{}:{}]", _address, _port);
         setwebHookUrl();
         createSession();
         _ioc.run();
@@ -52,13 +52,6 @@ namespace simpleHttpServer
         session->start();
     }
 
-    SimpleHttpServer::Session::Session(tcp::socket socket, sipeto::Sipeto &sipeto, tcp::acceptor &acceptor)
-        : _socket(std::move(socket)), _sipeto(sipeto), _acceptor(acceptor) {}
-
-    void SimpleHttpServer::Session::start()
-    {
-        readRequest();
-    }
 
     size_t SimpleHttpServer::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     {
@@ -122,18 +115,33 @@ namespace simpleHttpServer
         if (webHookUrlIsSet)
         {
             // webHookUrl is set up successfully.
-            _sipeto.getLogger()->debug("WebHookUrl: {}", responseJson["description"].asString());
+            _sipeto.getLogger()->debug("WebHookUrl: {}",
+                                       responseJson["description"].asString());
         }
         else
         {
-            // webHookUrl is not set 
-            _sipeto.getLogger()->debug("WebHookUrl: {}", responseJson["description"].asString());
+            // webHookUrl is not set
+            _sipeto.getLogger()->debug("WebHookUrl: {}",
+                                       responseJson["description"].asString());
             exit(1);
         }
 
         // Clear the response buffer for future use
         _responseBuffer.str(std::string());
         _responseBuffer.clear();
+    }
+
+    
+/*!SimpleHttpServer */
+
+    /// @brief simple http server session constructor
+    SimpleHttpServer::Session::Session(tcp::socket socket, sipeto::Sipeto &sipeto, tcp::acceptor &acceptor)
+        : _socket(std::move(socket)), _sipeto(sipeto), _acceptor(acceptor) {}
+
+    /// @brief Start the asynchronous operation
+    void SimpleHttpServer::Session::start()
+    {
+        readRequest();
     }
 
     /// @brief accept connections from Telegram bot
