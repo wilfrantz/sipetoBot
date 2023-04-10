@@ -114,15 +114,58 @@ namespace sipeto
     /// @brief  Print a welcome message
     /// @param  none.
     /// @return none.
-     void Sipeto::displayProgramInfo()
+    void Sipeto::displayInfo()
     {
         spdlog::info("Welcome to {} {}.",
                      getFromConfigMap("project"),
                      getFromConfigMap("version"));
+
         spdlog::info("{}", getFromConfigMap("description"));
 
         _logger->debug("Developed by: {}.", getFromConfigMap("author"));
+
+        for (const auto &element : _config)
+        {
+            _logger->debug("Config: {} = {}", element.first, element.second);
+        }
     }
+
+    /// @brief Set the log level.
+    /// @param level
+    /// return none.
+    void Sipeto::setLogLevel(const std::string &level)
+    {
+        spdlog::level::level_enum log_level;
+
+        switch (hash(level.c_str()))
+        {
+        case hash("debug"):
+            log_level = spdlog::level::debug;
+            break;
+        case hash("info"):
+            log_level = spdlog::level::info;
+            break;
+        case hash("warn"):
+            log_level = spdlog::level::warn;
+            break;
+        case hash("error"):
+            log_level = spdlog::level::err;
+            break;
+        case hash("critical"):
+            log_level = spdlog::level::critical;
+            break;
+        case hash("off"):
+            log_level = spdlog::level::off;
+            break;
+        default:
+            spdlog::warn("Invalid log level '{}'", level);
+            return;
+        }
+
+        spdlog::set_level(log_level);
+        spdlog::stdout_color_mt("sipeto");
+    }
+
 
     /// @brief: Define a function to start the server
     /// Handle a request and produce a reply.

@@ -35,7 +35,7 @@ if (UNIX AND NOT APPLE)
         Boost::thread
         CURL::libcurl
         jsoncpp
-        # ${TDJSON_LIBRARIES}
+        ${TDJSON_LIBRARIES}
     )
 else(APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE
@@ -44,7 +44,7 @@ else(APPLE)
     Boost::system
     Boost::thread
     CURL::libcurl
-    #    ${TDJSON_LIBRARIES}
+    ${TDJSON_LIBRARIES}
     /usr/local/Cellar/jsoncpp/1.9.5/lib/libjsoncpp.dylib
     )
 endif()

@@ -7,12 +7,13 @@ using namespace simpleHttpServer;
 int main(int argc, char **argv)
 {
     Sipeto sipeto;
+    // debug, info, warn, error, critical, off
+    sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
+    // Display program information message
+    sipeto.displayInfo();
+
     SimpleHttpServer httpServer(sipeto);
-
-    // Display welcome message
-    sipeto.displayProgramInfo();
-
-    // Start the server
+    // Start the http server
     httpServer.start();
 
     return 0;

@@ -73,7 +73,7 @@ namespace simpleHttpServer
     /// NOTE: webHookUrl needs to be set up only once.
     void SimpleHttpServer::setwebHookUrl()
     {
-        spdlog::info("Setting up webHookUrl...");
+        _sipeto.getLogger()->debug("Setting up webHookUrl...");
         std::string url = _sipeto.getFromConfigMap("endpoint");
         url += _sipeto.getFromConfigMap("token");
         url += "/setWebhook?url=";
@@ -121,11 +121,14 @@ namespace simpleHttpServer
         bool webHookUrlIsSet = responseJson["result"].asBool();
         if (webHookUrlIsSet)
         {
-            spdlog::info("WebHookUrl set successfully: {}", responseJson["description"].asString());
+            // webHookUrl is set up successfully.
+            _sipeto.getLogger()->debug("WebHookUrl: {}", responseJson["description"].asString());
         }
         else
         {
-            spdlog::error("Failed to set WebHookUrl: {}", responseJson["description"].asString());
+            // webHookUrl is not set 
+            _sipeto.getLogger()->debug("WebHookUrl: {}", responseJson["description"].asString());
+            exit(1);
         }
 
         // Clear the response buffer for future use
