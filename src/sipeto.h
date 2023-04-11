@@ -17,8 +17,8 @@ namespace sipeto
     public:
         explicit Sipeto(const std::string &configFile = "sipeto_config.json");
 
-        void displayInfo();
         void loadConfig();
+        void displayInfo();
         void setLogLevel(const std::string &level);
         void processTelegramUpdate(const Json::Value &update);
         void sendMessage(std::string chat_id, std::string text);

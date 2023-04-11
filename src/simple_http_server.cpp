@@ -38,7 +38,7 @@ namespace simpleHttpServer
     void SimpleHttpServer::start()
     {
         spdlog::info("SimpleHttpServer Start [{}:{}]", _address, _port);
-        setwebHookUrl();
+        // setwebHookUrl();
         createSession();
         _ioc.run();
     }
