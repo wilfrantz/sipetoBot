@@ -7,7 +7,7 @@ using namespace simpleHttpServer;
 int main(int argc, char **argv)
 {
     Sipeto sipeto;
-    // debug, info, warn, error, critical, off
+    // set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
     // Display program information message
     sipeto.displayInfo();

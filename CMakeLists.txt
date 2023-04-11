@@ -29,14 +29,13 @@ set(CMAKE_BUILD_TYPE Debug)
 
 if (UNIX AND NOT APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE
+        tdjson
+        jsoncpp
         fmt::fmt
         spdlog::spdlog
         Boost::system
         Boost::thread
         CURL::libcurl
-        jsoncpp
-        tdjson
-        # ${TDJSON_LIBRARIES}
     )
 else(APPLE)
     target_link_libraries(${PROJECT_NAME} PRIVATE

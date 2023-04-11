@@ -6,10 +6,8 @@ namespace sipeto
 
     Sipeto::Sipeto(const std::string &configFIle) : _configFile(configFIle)
     {
-        if (!_configFile.empty())
-        {
-            setConfig();
-        }
+        // load configuration map
+        loadConfig();
 
         _logger = spdlog::get(getFromConfigMap("project"));
         if (!_logger)
@@ -21,8 +19,13 @@ namespace sipeto
     /// @brief Set the config file.
     /// @param none.
     /// @return none.
-    void Sipeto::setConfig()
+    void Sipeto::loadConfig()
     {
+        if (_configFile.empty())
+        {
+            spdlog::error("Configuration file is empty.");
+            exit(1);
+        }
         try
         {
             _logger->debug("Loading configuration file: {}.", _configFile);
@@ -121,8 +124,9 @@ namespace sipeto
                      getFromConfigMap("version"));
 
         spdlog::info("{}", getFromConfigMap("description"));
+        spdlog::info("Developed by: {}.", getFromConfigMap("author"));
 
-        _logger->debug("Developed by: {}.", getFromConfigMap("author"));
+        // _logger->info("Developed by: {}.", getFromConfigMap("author"));
 
         for (const auto &element : _config)
         {
@@ -166,6 +170,125 @@ namespace sipeto
         spdlog::stdout_color_mt("sipeto");
     }
 
+    void Sipeto::sendMessage(std::string chat_id, std::string text)
+    {
+        // Send the message using the sendMessage method of the Telegram API
+        std::string url = getFromConfigMap("endpoint");
+        url += getFromConfigMap("token");
+        url += "/sendMessage";
+
+        std::string data = "chat_id=" + encodeUrl(chat_id) + "&text=" + encodeUrl(text);
+        makeRequest(url, data);
+    }
+
+    std::string Sipeto::encodeUrl(std::string str)
+    {
+        std::string encoded_str = "";
+        char c;
+        int ic;
+        const char *chars = str.c_str();
+        char bufHex[10];
+        int len = strlen(chars);
+
+        for (int i = 0; i < len; i++)
+        {
+            c = chars[i];
+            ic = c;
+            if (c == ' ')
+            {
+                encoded_str += '+';
+            }
+            else if (isalnum(c) || c == '-' || c == '_' || c == '.' || c == '~')
+            {
+                encoded_str += c;
+            }
+            else
+            {
+                sprintf(bufHex, "%X", c);
+                if (ic < 16)
+                {
+                    encoded_str += "%0";
+                }
+                else
+                {
+                    encoded_str += "%";
+                }
+                encoded_str += bufHex;
+            }
+        }
+
+        return encoded_str;
+    }
+
+    std::string Sipeto::makeRequest(std::string &url, std::string data)
+    {
+        CURL *curl;
+        CURLcode res;
+        std::string response_string;
+
+        curl = curl_easy_init();
+        if (curl)
+        {
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            if (!data.empty())
+            {
+                curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data.c_str());
+            }
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, [](char *ptr, size_t size, size_t nmemb, void *userdata) -> size_t
+                             {
+            ((std::string*)userdata)->append(ptr, size * nmemb);
+            return size * nmemb; });
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response_string);
+            res = curl_easy_perform(curl);
+            curl_easy_cleanup(curl);
+        }
+
+        return response_string;
+    }
+
+    void Sipeto::processUpdate(const Update &update)
+    {
+        // Log the update message for debugging purposes
+        SPDLOG_DEBUG("Received update: {}", Json::FastWriter().write(update));
+
+        // Extract the relevant fields from the update message
+        std::string chat_id = std::to_string(update.message.chat.id);
+        std::string user_id = std::to_string(update.message.from.id);
+        std::string message_text = update.message.text;
+
+        // Process the update by sending a response message
+        std::string response_text = "You said: " + message_text;
+        sendMessage(chat_id, response_text);
+    }
+    // void Sipeto::handleWebhookRequest(const HttpRequest &request, HttpResponse &response)
+    // {
+    //     // Parse the request body as JSON and process each update
+    //     Json::Value root;
+    //     Json::Reader reader;
+    //     reader.parse(request.getBody(), root);
+    //     if (root.isObject() && root.isMember("update_id"))
+    //     {
+    //         Update update;
+    //         update.update_id = root["update_id"].asInt();
+    //         update.message.message_id = root["message"]["message_id"].asInt();
+    //         update.message.date = root["message"]["date"].asInt();
+    //         update.message.text = root["message"]["text"].asString();
+    //         update.message.from.id = root["message"]["from"]["id"].asInt();
+    //         update.message.from.first_name = root["message"]["from"]["first_name"].asString();
+    //         update.message.from.last_name = root["message"]["from"]["last_name"].asString();
+    //         update.message.from.username = root["message"]["from"]["username"].asString();
+    //         update.message.chat.id = root["message"]["chat"]["id"].asInt();
+    //         update.message.chat.type = root["message"]["chat"]["type"].asString();
+    //         update.message.chat.title = root["message"]["chat"]["title"].asString();
+    //         update.message.chat.username = root["message"]["chat"]["username"].asString();
+    //         update.message.chat.first_name = root["message"]["chat"]["first_name"].asString();
+    //         update.message.chat.last_name = root["message"]["chat"]["last_name"].asString();
+    //         processUpdate(update);
+    //     }
+
+    //     // Return a 200 OK response to acknowledge receipt of the request
+    //     response.setStatus(200);
+    // }
 
     /// @brief: Define a function to start the server
     /// Handle a request and produce a reply.

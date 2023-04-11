@@ -18,6 +18,7 @@ namespace sipeto
         explicit Sipeto(const std::string &configFile = "sipeto_config.json");
 
         void displayInfo();
+        void loadConfig();
         void setLogLevel(const std::string &level);
         void processTelegramUpdate(const Json::Value &update);
         void sendMessage(std::string chat_id, std::string text);
@@ -59,11 +60,12 @@ namespace sipeto
             Message message;
         };
 
-        void setConfig();
         std::string encodeUrl(std::string str);
+        void processUpdate(const Update &update);
         std::vector<Update> parseUpdatesJson(Json::Value root);
-        std::string makeRequest(std::string url, std::string data = "");
+        std::string makeRequest(std::string &url, std::string data = "");
         void handleRequest(http::request<http::string_body> &&req, tcp::socket &socket);
+        // void Sipeto::handleWebhookRequest(const HttpRequest &request, HttpResponse &response);
         // Hash function for use with switch statement in setLogLevel()
         static constexpr std::size_t hash(const char *s, std::size_t h = 0)
         {
