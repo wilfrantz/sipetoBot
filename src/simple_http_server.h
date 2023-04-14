@@ -46,7 +46,7 @@ namespace simpleHttpServer
         private:
             void readRequest();
             void handleRequest();
-            void writeResponse();
+            void writeResponse(const http::response<http::string_body> &response);
 
             tcp::socket _socket;
             sipeto::Sipeto &_sipeto;

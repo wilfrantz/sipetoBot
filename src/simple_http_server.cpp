@@ -179,14 +179,38 @@ namespace simpleHttpServer
     void SimpleHttpServer::Session::readRequest()
     {
         spdlog::info("Reading request...");
+
         auto self = shared_from_this();
+
+        // Define a lambda function to handle errors during request reading
+        auto onError = [self, this](const std::string &errorMessage)
+        {
+            spdlog::error(errorMessage);
+            // Generate an HTTP response with status 400 Bad Request
+            http::response<http::string_body> badRequestRes{http::status::bad_request, self->_req.version()};
+
+            badRequestRes.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            badRequestRes.keep_alive(self->_req.keep_alive());
+            badRequestRes.prepare_payload();
+            this->writeResponse(badRequestRes);
+        };
+
         http::async_read(_socket, _buffer, _req,
-                         [self](boost::system::error_code ec, std::size_t)
+                         [self, onError, this](boost::system::error_code ec, std::size_t)
                          {
-                             if (!ec)
+                             if (ec)
                              {
-                                 self->handleRequest();
+                                 onError("Failed to read request: " + ec.message());
+                                 return;
                              }
+
+                             if (_req.target().empty() || _req.method() == http::verb::unknown)
+                             {
+                                 onError("Invalid request");
+                                 return;
+                             }
+
+                             self->handleRequest();
                          });
     }
 
@@ -206,7 +230,6 @@ namespace simpleHttpServer
                 acceptConnections();
             });
     }
-
 
     /// @brief handle incoming requests from Telegram bot
     /// @param none
@@ -235,22 +258,43 @@ namespace simpleHttpServer
             res.keep_alive(_req.keep_alive());
             res.body() = result;
             res.prepare_payload();
-            writeResponse();
+            writeResponse(res);
         }
     }
 
     /// @brief write response to the client
-    /// @param none
+    /// @param bad_request_res HTTP response with status 400 Bad Request
     /// @return none
-    void SimpleHttpServer::Session::writeResponse()
+    void SimpleHttpServer::Session::writeResponse(const http::response<http::string_body> &response)
     {
         auto self = shared_from_this();
-        http::async_write(_socket, _res,
-                          [self](boost::system::error_code ec, std::size_t)
+        http::async_write(_socket, response,
+                          [self, response](boost::system::error_code ec, std::size_t)
                           {
-                              if (!ec && self->_res.need_eof())
+                              if (ec)
                               {
+                                  spdlog::error("Error writing response: {}", ec.message());
+                                  return;
+                              }
+                              if (self->_res.need_eof())
+                              {
+                                  boost::system::error_code ec;
                                   self->_socket.shutdown(tcp::socket::shutdown_send, ec);
+                                  if (ec)
+                                  {
+                                      spdlog::error("Error shutting down socket: {}", ec.message());
+                                      return;
+                                  }
+                              }
+                              if (response.result() == http::status::bad_request)
+                              {
+                                  boost::system::error_code ec;
+                                  self->_socket.close(ec);
+                                  if (ec)
+                                  {
+                                      spdlog::error("Error closing socket: {}", ec.message());
+                                      return;
+                                  }
                               }
                           });
     }
@@ -267,8 +311,12 @@ namespace simpleHttpServer
         std::istringstream ss(_req.body());
         if (!Json::parseFromStream(builder, ss, &update, &errors))
         {
-            // NOTE: If parsing fails, return an error response
-            // or handle it in a different way
+            // If parsing fails, return an HTTP response with status 400 Bad Request
+            http::response<http::string_body> badRequestRes{http::status::bad_request, _req.version()};
+            badRequestRes.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+            badRequestRes.keep_alive(_req.keep_alive());
+            badRequestRes.prepare_payload();
+            writeResponse(badRequestRes);
             return;
         }
 
@@ -276,10 +324,10 @@ namespace simpleHttpServer
         _sipeto.processTelegramUpdate(update);
 
         // Generate an HTTP response with status 200 OK
-        http::response<http::empty_body> res{http::status::ok, _req.version()};
+        http::response<http::string_body> res{http::status::ok, _req.version()};
         res.set(http::field::server, BOOST_BEAST_VERSION_STRING);
         res.keep_alive(_req.keep_alive());
         res.prepare_payload();
-        writeResponse();
+        writeResponse(res);
     }
 }
