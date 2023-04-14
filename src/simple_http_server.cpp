@@ -37,8 +37,8 @@ namespace simpleHttpServer
         try
         {
             spdlog::info("Creating endpoint...");
-            spdlog::info("Address: {}", _address);
-            spdlog::info("Port: {}", port_number);
+            _sipeto.getLogger()->debug("Address: {}", _address);
+            _sipeto.getLogger()->debug("Port: {}", port_number);
             tcp::endpoint endpoint{boost::asio::ip::make_address(_address), port_number};
             boost::system::error_code ec;
             temp_socket.open(endpoint.protocol(), ec);
@@ -52,7 +52,6 @@ namespace simpleHttpServer
             {
                 throw std::runtime_error(std::string("Failed to bind socket to endpoint: ") + ec.message());
             }
-            // exit(0);
         }
         catch (const boost::system::system_error &e)
         {
