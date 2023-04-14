@@ -173,23 +173,6 @@ namespace simpleHttpServer
         readRequest();
     }
 
-    /// @brief accept connections from Telegram bot
-    /// @param none
-    /// @return none
-    void SimpleHttpServer::Session::acceptConnections()
-    {
-        _acceptor.async_accept(
-            [this](boost::system::error_code ec, tcp::socket socket)
-            {
-                if (!ec)
-                {
-                    auto new_session = std::make_shared<Session>(std::move(socket), _sipeto, _acceptor);
-                    new_session->start();
-                }
-                acceptConnections();
-            });
-    }
-
     /// @brief read incoming requests from Telegram bot
     /// @param none
     /// @return none
@@ -207,11 +190,31 @@ namespace simpleHttpServer
                          });
     }
 
+    /// @brief accept connections from Telegram bot
+    /// @param none
+    /// @return none
+    void SimpleHttpServer::Session::acceptConnections()
+    {
+        _acceptor.async_accept(
+            [this](boost::system::error_code ec, tcp::socket socket)
+            {
+                if (!ec)
+                {
+                    auto new_session = std::make_shared<Session>(std::move(socket), _sipeto, _acceptor);
+                    new_session->start();
+                }
+                acceptConnections();
+            });
+    }
+
+
     /// @brief handle incoming requests from Telegram bot
     /// @param none
     /// @return none
     void SimpleHttpServer::Session::handleRequest()
     {
+        spdlog::info("Handling request...");
+
         // Check if the incoming request is a Telegram bot update
         if (_req.target() == "/" + _sipeto.getFromConfigMap("token"))
         {
@@ -221,6 +224,7 @@ namespace simpleHttpServer
         }
         else
         {
+            spdlog::info("Received HTTP request");
             // Process request using Sipeto class (existing implementation)
             std::string result = _sipeto.processRequest(_req.body());
 
