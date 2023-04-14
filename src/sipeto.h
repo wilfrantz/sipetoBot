@@ -26,6 +26,7 @@ namespace sipeto
         const std::string &getFromConfigMap(const std::string &key);
         std::shared_ptr<spdlog::logger> getLogger() { return _logger; }
 
+
     private:
         struct User
         {

@@ -31,6 +31,23 @@ namespace simpleHttpServer
             throw std::out_of_range("Port number out of range");
         }
 
+        // Try to bind a temporary socket to the specified IP address and port
+        tcp::socket temp_socket{_ioc};
+        tcp::endpoint endpoint{boost::asio::ip::make_address(address), port_number};
+        boost::system::error_code ec;
+        temp_socket.open(endpoint.protocol(), ec);
+        if (ec)
+        {
+            throw std::runtime_error("Failed to open socket");
+        }
+        temp_socket.set_option(boost::asio::socket_base::reuse_address(true));
+        temp_socket.bind(endpoint, ec);
+        if (ec)
+        {
+            throw std::runtime_error("Failed to bind socket to endpoint");
+        }
+
+        // Create the acceptor and set the reuse_address option
         _acceptor = std::make_unique<tcp::acceptor>(_ioc, tcp::endpoint(tcp::v4(), port_number));
         _acceptor->set_option(boost::asio::socket_base::reuse_address(true));
     }
@@ -38,20 +55,21 @@ namespace simpleHttpServer
     void SimpleHttpServer::start()
     {
         spdlog::info("SimpleHttpServer Start [{}:{}]", _address, _port);
-        // setwebHookUrl();
+        setwebHookUrl();
         createSession();
         _ioc.run();
     }
 
     void SimpleHttpServer::createSession()
     {
+        spdlog::info("Creating session...");
         tcp::socket socket{_ioc};
         _acceptor->accept(socket);
+        _sipeto.getLogger()->debug("Session created.");
         auto session = std::make_shared<Session>(std::move(socket), _sipeto, *_acceptor);
         _sessions.push_back(session);
         session->start();
     }
-
 
     size_t SimpleHttpServer::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     {
@@ -131,8 +149,7 @@ namespace simpleHttpServer
         _responseBuffer.clear();
     }
 
-    
-/*!SimpleHttpServer */
+    /*!SimpleHttpServer */
 
     /// @brief simple http server session constructor
     SimpleHttpServer::Session::Session(tcp::socket socket, sipeto::Sipeto &sipeto, tcp::acceptor &acceptor)
@@ -141,6 +158,7 @@ namespace simpleHttpServer
     /// @brief Start the asynchronous operation
     void SimpleHttpServer::Session::start()
     {
+        spdlog::info("Starting session...");
         readRequest();
     }
 
@@ -166,6 +184,7 @@ namespace simpleHttpServer
     /// @return none
     void SimpleHttpServer::Session::readRequest()
     {
+        spdlog::info("Reading request...");
         auto self = shared_from_this();
         http::async_read(_socket, _buffer, _req,
                          [self](boost::system::error_code ec, std::size_t)
