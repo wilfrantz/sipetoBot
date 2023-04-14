@@ -179,6 +179,11 @@ namespace simpleHttpServer
     void SimpleHttpServer::Session::readRequest()
     {
         spdlog::info("Reading request...");
+        /// TODO: remove theses lines
+        spdlog::info("HTTP method: {}", _req.method_string());
+        spdlog::info("HTTP target: {}", _req.target());
+        exit(1);
+
 
         auto self = shared_from_this();
 
