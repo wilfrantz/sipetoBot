@@ -179,10 +179,9 @@ namespace simpleHttpServer
     void SimpleHttpServer::Session::readRequest()
     {
         spdlog::info("Reading request...");
-        /// TODO: remove theses lines
+        /// NOTE: remove theses lines
         spdlog::info("HTTP method: {}", _req.method_string());
         spdlog::info("HTTP target: {}", _req.target());
-        exit(1);
 
 
         auto self = shared_from_this();
@@ -199,6 +198,11 @@ namespace simpleHttpServer
             badRequestRes.prepare_payload();
             this->writeResponse(badRequestRes);
         };
+
+        /// NOTE: remove theses lines
+        spdlog::info("Raw request data: {}", std::string(boost::beast::buffers_to_string(_buffer.data())));
+        exit(1);
+
 
         http::async_read(_socket, _buffer, _req,
                          [self, onError, this](boost::system::error_code ec, std::size_t)
