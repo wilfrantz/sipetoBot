@@ -126,8 +126,7 @@ namespace sipeto
         spdlog::info("{}", getFromConfigMap("description"));
         spdlog::info("Developed by: {}.", getFromConfigMap("author"));
 
-        // _logger->info("Developed by: {}.", getFromConfigMap("author"));
-
+        // Display the configuration file in debug mode.
         for (const auto &element : _config)
         {
             _logger->debug("Config: {} = {}", element.first, element.second);

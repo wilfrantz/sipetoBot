@@ -14,7 +14,7 @@ int main(int argc, char **argv)
 
     SimpleHttpServer httpServer(sipeto);
     // Start the http server
-    httpServer.start();
+    // httpServer.start();
 
     return 0;
 }

@@ -18,33 +18,45 @@ namespace simpleHttpServer
         unsigned short port_number;
         try
         {
-            port_number = static_cast<unsigned short>(std::stoi(port));
+            port_number = static_cast<unsigned short>(std::stoi(_port));
         }
         catch (const std::invalid_argument &e)
         {
-            spdlog::error("Invalid port number: {}", port);
+            spdlog::error("Invalid port number: {}", _port);
             throw std::invalid_argument("Invalid port number");
         }
         catch (const std::out_of_range &e)
         {
-            spdlog::error("Port number out of range: {}", port);
+            spdlog::error("Port number out of range: {}", _port);
             throw std::out_of_range("Port number out of range");
         }
 
         // Try to bind a temporary socket to the specified IP address and port
         tcp::socket temp_socket{_ioc};
-        tcp::endpoint endpoint{boost::asio::ip::make_address(address), port_number};
-        boost::system::error_code ec;
-        temp_socket.open(endpoint.protocol(), ec);
-        if (ec)
+
+        try
         {
-            throw std::runtime_error("Failed to open socket");
+            spdlog::info("Creating endpoint...");
+            spdlog::info("Address: {}", _address);
+            spdlog::info("Port: {}", port_number);
+            tcp::endpoint endpoint{boost::asio::ip::make_address(_address), port_number};
+            boost::system::error_code ec;
+            temp_socket.open(endpoint.protocol(), ec);
+            if (ec)
+            {
+                throw std::runtime_error(std::string("Failed to open socket: ") + ec.message());
+            }
+            temp_socket.set_option(boost::asio::socket_base::reuse_address(true));
+            temp_socket.bind(endpoint, ec);
+            if (ec)
+            {
+                throw std::runtime_error(std::string("Failed to bind socket to endpoint: ") + ec.message());
+            }
+            // exit(0);
         }
-        temp_socket.set_option(boost::asio::socket_base::reuse_address(true));
-        temp_socket.bind(endpoint, ec);
-        if (ec)
+        catch (const boost::system::system_error &e)
         {
-            throw std::runtime_error("Failed to bind socket to endpoint");
+            throw std::runtime_error(std::string("Failed to create endpoint: ") + e.what());
         }
 
         // Create the acceptor and set the reuse_address option
