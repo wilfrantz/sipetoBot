@@ -217,17 +217,20 @@ namespace simpleHttpServer
                              if (ec)
                              {
                                  onError("Failed to read request: " + ec.message());
+                                 spdlog::error("Failed to read request: {}", ec.message());
                                  return;
                              }
 
                              if (_req.target().empty() || _req.method() == http::verb::unknown)
                              {
                                  onError("Invalid request");
+                                 spdlog::error("Invalid request");
                                  return;
                              }
 
                              self->handleRequest();
                          });
+
         /// NOTE: remove theses lines
         _sipeto.getLogger()->debug("Raw request data: {}", std::string(boost::beast::buffers_to_string(_buffer.data())));
         exit(1);
