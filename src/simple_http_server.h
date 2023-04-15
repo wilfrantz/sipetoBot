@@ -54,9 +54,9 @@ namespace simpleHttpServer
             http::response<http::string_body> _res;
         };
 
-        std::string _port;
-        std::string _address;
         void createSession();
+        std::string _port{"8080"};
+        std::string _address{"localhost"};
         boost::asio::io_context _ioc{1};
         std::stringstream _responseBuffer;
         std::unique_ptr<tcp::acceptor> _acceptor;

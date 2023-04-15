@@ -31,7 +31,7 @@ namespace simpleHttpServer
             throw std::out_of_range("Port number out of range");
         }
 
-        // Try to bind a temporary socket to the specified IP address and port
+        // Bind a temporary socket to the specified IP address and port.
         tcp::socket temp_socket{_ioc};
 
         try
@@ -63,25 +63,37 @@ namespace simpleHttpServer
         _acceptor->set_option(boost::asio::socket_base::reuse_address(true));
     }
 
+    /// @brief start the server
+    /// @param none
+    /// @return none
     void SimpleHttpServer::start()
     {
-        spdlog::info("SimpleHttpServer Start [{}:{}]", _address, _port);
+        spdlog::info("Start Http Server [{}:{}]", _address, _port);
         setwebHookUrl();
         createSession();
         _ioc.run();
     }
 
+    /// @brief create a session
+    /// @param none
+    /// @return none
     void SimpleHttpServer::createSession()
     {
         spdlog::info("Creating session...");
         tcp::socket socket{_ioc};
         _acceptor->accept(socket);
-        _sipeto.getLogger()->debug("Session created.");
         auto session = std::make_shared<Session>(std::move(socket), _sipeto, *_acceptor);
         _sessions.push_back(session);
+        _sipeto.getLogger()->debug("Session created.");
         session->start();
     }
 
+    /// @brief write callback function for curl
+    /// @param ptr 
+    /// @param size
+    /// @param nmemb
+    /// @param userdata
+    /// @return size_t
     size_t SimpleHttpServer::writeCallback(char *ptr, size_t size, size_t nmemb, void *userdata)
     {
         size_t realsize = size * nmemb;
@@ -89,6 +101,7 @@ namespace simpleHttpServer
         responseBuffer->write(ptr, realsize);
         return realsize;
     }
+
     /// @brief  set up a webHookUrl for Telegram bot
     /// @param none
     /// @return none
@@ -167,6 +180,8 @@ namespace simpleHttpServer
         : _socket(std::move(socket)), _sipeto(sipeto), _acceptor(acceptor) {}
 
     /// @brief Start the asynchronous operation
+    /// @param none
+    /// @return none
     void SimpleHttpServer::Session::start()
     {
         spdlog::info("Starting session...");
@@ -179,10 +194,6 @@ namespace simpleHttpServer
     void SimpleHttpServer::Session::readRequest()
     {
         spdlog::info("Reading request...");
-        /// NOTE: remove theses lines
-        spdlog::info("HTTP method: {}", _req.method_string());
-        spdlog::info("HTTP target: {}", _req.target());
-
 
         auto self = shared_from_this();
 
@@ -198,10 +209,6 @@ namespace simpleHttpServer
             badRequestRes.prepare_payload();
             this->writeResponse(badRequestRes);
         };
-
-        /// NOTE: remove theses lines
-        spdlog::info("Raw request data: {}", std::string(boost::beast::buffers_to_string(_buffer.data())));
-        exit(1);
 
 
         http::async_read(_socket, _buffer, _req,
@@ -221,6 +228,9 @@ namespace simpleHttpServer
 
                              self->handleRequest();
                          });
+        /// NOTE: remove theses lines
+        _sipeto.getLogger()->debug("Raw request data: {}", std::string(boost::beast::buffers_to_string(_buffer.data())));
+        exit(1);
     }
 
     /// @brief accept connections from Telegram bot
