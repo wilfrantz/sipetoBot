@@ -15,10 +15,10 @@ namespace simpleHttpServer
     {
         curl_global_init(CURL_GLOBAL_DEFAULT);
 
-        unsigned short port_number;
+        unsigned short portNumber = 8080;
         try
         {
-            port_number = static_cast<unsigned short>(std::stoi(_port));
+            portNumber = static_cast<unsigned short>(std::stoi(_port));
         }
         catch (const std::invalid_argument &e)
         {
@@ -38,8 +38,8 @@ namespace simpleHttpServer
         {
             spdlog::info("Creating endpoint...");
             _sipeto.getLogger()->debug("Address: {}", _address);
-            _sipeto.getLogger()->debug("Port: {}", port_number);
-            tcp::endpoint endpoint{boost::asio::ip::make_address(_address), port_number};
+            _sipeto.getLogger()->debug("Port: {}", portNumber);
+            tcp::endpoint endpoint{boost::asio::ip::make_address(_address), portNumber};
             boost::system::error_code ec;
             temp_socket.open(endpoint.protocol(), ec);
             if (ec)
@@ -59,7 +59,7 @@ namespace simpleHttpServer
         }
 
         // Create the acceptor and set the reuse_address option
-        _acceptor = std::make_unique<tcp::acceptor>(_ioc, tcp::endpoint(tcp::v4(), port_number));
+        _acceptor = std::make_unique<tcp::acceptor>(_ioc, tcp::endpoint(tcp::v4(), portNumber));
         _acceptor->set_option(boost::asio::socket_base::reuse_address(true));
     }
 

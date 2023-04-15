@@ -21,9 +21,8 @@ namespace simpleHttpServer
         void start();
         void setwebHookUrl();
         void runSessionMethod();
-        void handleSetWebHookUrlResponse();
-        // std::unique_ptr<sipeto::Sipeto> _sipeto;
         sipeto::Sipeto &_sipeto;
+        void handleSetWebHookUrlResponse();
 
         ~SimpleHttpServer()
         {
@@ -39,8 +38,8 @@ namespace simpleHttpServer
                              tcp::acceptor &acceptor);
 
             void start();
-            tcp::acceptor &_acceptor;
             void acceptConnections();
+            tcp::acceptor &_acceptor;
             void processTelegramUpdate();
 
         private:
@@ -55,18 +54,15 @@ namespace simpleHttpServer
             http::response<http::string_body> _res;
         };
 
-        void createSession();
-        std::stringstream _responseBuffer;
-
         std::string _port;
         std::string _address;
-        // tcp::acceptor _acceptor;
-        std::unique_ptr<tcp::acceptor> _acceptor;
+        void createSession();
         boost::asio::io_context _ioc{1};
-        std::vector<std::shared_ptr<Session>> _sessions;
+        std::stringstream _responseBuffer;
+        std::unique_ptr<tcp::acceptor> _acceptor;
+        std::vector<std::shared_ptr<Session>> _sessions{};
         static size_t writeCallback(char *ptr, size_t size,
                                     size_t nmemb, void *userdata);
     };
-
 } // !namespace SimpleHttpServer
 #endif // !SIMPLE_HTTP_SERVER_H
