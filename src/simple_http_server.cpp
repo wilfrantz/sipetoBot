@@ -4,74 +4,95 @@
 namespace simpleHttpServer
 {
     /// @brief simple http server constructor
-    /// @param address of the server
-    /// @param port to listen on
-    SimpleHttpServer::SimpleHttpServer(sipeto::Sipeto &sipeto,
-                                       const std::string &address,
-                                       const std::string &port)
-        : _sipeto(sipeto),
-          _port(_sipeto.getFromConfigMap("port")),
-          _address(_sipeto.getFromConfigMap("address"))
+    /// @param ioc
+    /// @param endpoint
+    SimpleHttpServer::SimpleHttpServer(boost::asio::io_context &ioc, const tcp::endpoint &endpoint, sipeto::Sipeto &sipeto)
+        : _sipeto(sipeto), _acceptor(std::make_unique<tcp::acceptor>(ioc))
     {
-        curl_global_init(CURL_GLOBAL_DEFAULT);
+        boost::system::error_code ec;
 
-        unsigned short portNumber = 8080;
-        try
+        // Open the acceptor
+        _acceptor->open(endpoint.protocol(), ec);
+        if (ec)
         {
-            portNumber = static_cast<unsigned short>(std::stoi(_port));
-        }
-        catch (const std::invalid_argument &e)
-        {
-            spdlog::error("Invalid port number: {}", _port);
-            throw std::invalid_argument("Invalid port number");
-        }
-        catch (const std::out_of_range &e)
-        {
-            spdlog::error("Port number out of range: {}", _port);
-            throw std::out_of_range("Port number out of range");
+            SPDLOG_LOGGER_ERROR(_sipeto.getLogger(), "Failed to open the acceptor: {}", ec.message());
+            return;
         }
 
-        // Bind a temporary socket to the specified IP address and port.
-        tcp::socket temp_socket{_ioc};
-
-        try
+        // Allow address reuse
+        _acceptor->set_option(boost::asio::socket_base::reuse_address(true), ec);
+        if (ec)
         {
-            spdlog::info("Creating endpoint...");
-            _sipeto.getLogger()->debug("Address: {}", _address);
-            _sipeto.getLogger()->debug("Port: {}", portNumber);
-            tcp::endpoint endpoint{boost::asio::ip::make_address(_address), portNumber};
-            boost::system::error_code ec;
-            temp_socket.open(endpoint.protocol(), ec);
-            if (ec)
-            {
-                throw std::runtime_error(std::string("Failed to open socket: ") + ec.message());
-            }
-            temp_socket.set_option(boost::asio::socket_base::reuse_address(true));
-            temp_socket.bind(endpoint, ec);
-            if (ec)
-            {
-                throw std::runtime_error(std::string("Failed to bind socket to endpoint: ") + ec.message());
-            }
-        }
-        catch (const boost::system::system_error &e)
-        {
-            throw std::runtime_error(std::string("Failed to create endpoint: ") + e.what());
+            SPDLOG_LOGGER_ERROR(_sipeto.getLogger(), "Failed to set acceptor option: {}", ec.message());
+            return;
         }
 
-        // Create the acceptor and set the reuse_address option
-        _acceptor = std::make_unique<tcp::acceptor>(_ioc, tcp::endpoint(tcp::v4(), portNumber));
-        _acceptor->set_option(boost::asio::socket_base::reuse_address(true));
+        // Bind to the server address
+        _acceptor->bind(endpoint, ec);
+        if (ec)
+        {
+            SPDLOG_LOGGER_ERROR(_sipeto.getLogger(), "Failed to bind the acceptor: {}", ec.message());
+            return;
+        }
+
+        // Start listening for connections
+        _acceptor->listen(boost::asio::socket_base::max_listen_connections, ec);
+        if (ec)
+        {
+            SPDLOG_LOGGER_ERROR(_sipeto.getLogger(), "Failed to listen on the acceptor: {}", ec.message());
+            return;
+        }
     }
 
-    /// @brief start the server
+    /// @brief run the http server
+    /// @param none
+    /// @return none
+    void SimpleHttpServer::run()
+    {
+        spdlog::info("Running the Server.");
+        if (!_acceptor || !_acceptor->is_open())
+        {
+            SPDLOG_LOGGER_ERROR(_sipeto.getLogger(), "Acceptor is not open");
+            return;
+        }
+
+        setwebHookUrl();
+        createSession();
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> workGuard(_ioc.get_executor());
+        _ioc.run();
+        // createSession();
+    }
+
+    /// @brief start the http server
     /// @param none
     /// @return none
     void SimpleHttpServer::start()
     {
-        spdlog::info("Start Http Server [{}:{}]", _address, _port);
+        spdlog::info("Start Http Server.");
+
         setwebHookUrl();
         createSession();
-        _ioc.run();
+
+        // Keep the io_context alive to prevent the server from stopping prematurely
+        boost::asio::executor_work_guard<boost::asio::io_context::executor_type> workGuard(_ioc.get_executor());
+
+        // Run the io_context in a separate thread
+        std::thread([&]
+                    { _ioc.run(); })
+            .detach();
+    }
+
+    void SimpleHttpServer::doAccept()
+    {
+        _acceptor->async_accept(
+            [this](boost::system::error_code ec, tcp::socket socket)
+            {
+                if (!ec)
+                {
+                    std::make_shared<Session>(std::move(socket), _sipeto, *_acceptor)->start();
+                }
+                doAccept();
+            });
     }
 
     /// @brief create a session
@@ -79,17 +100,37 @@ namespace simpleHttpServer
     /// @return none
     void SimpleHttpServer::createSession()
     {
-        spdlog::info("Creating session...");
-        tcp::socket socket{_ioc};
-        _acceptor->accept(socket);
-        auto session = std::make_shared<Session>(std::move(socket), _sipeto, *_acceptor);
-        _sessions.push_back(session);
-        _sipeto.getLogger()->debug("Session created.");
-        session->start();
+        spdlog::info("Creating Session...");
+        SPDLOG_LOGGER_DEBUG(_sipeto.getLogger(), "Creating session...");
+
+        _acceptor->async_accept(
+            [this](boost::system::error_code ec, tcp::socket socket)
+            {
+                if (!ec)
+                {
+                    spdlog::info("Session accepted.");
+                    SPDLOG_LOGGER_DEBUG(_sipeto.getLogger(), "Session accepted.");
+                    auto session = std::make_shared<Session>(std::move(socket), _sipeto, *_acceptor);
+                    _sessions.push_back(session);
+                    SPDLOG_LOGGER_DEBUG(_sipeto.getLogger(), "Session created.");
+                    session->start();
+                }
+                else
+                {
+                    spdlog::info("Failed to accept session: {}", ec.message());
+                    spdlog::error("Failed to accept session: {}", ec.message());
+                    SPDLOG_LOGGER_ERROR(_sipeto.getLogger(), "Failed to accept session: {}", ec.message());
+                }
+
+                createSession();
+            });
+
+        SPDLOG_LOGGER_DEBUG(_sipeto.getLogger(), "createSession method completed.");
+        _sipeto.getLogger()->debug("CreateSession method completed.");
     }
 
     /// @brief write callback function for curl
-    /// @param ptr 
+    /// @param ptr
     /// @param size
     /// @param nmemb
     /// @param userdata
@@ -177,7 +218,9 @@ namespace simpleHttpServer
 
     /// @brief simple http server session constructor
     SimpleHttpServer::Session::Session(tcp::socket socket, sipeto::Sipeto &sipeto, tcp::acceptor &acceptor)
-        : _socket(std::move(socket)), _sipeto(sipeto), _acceptor(acceptor) {}
+        : _socket(std::move(socket)),
+          _sipeto(sipeto),
+          _acceptor(acceptor) {}
 
     /// @brief Start the asynchronous operation
     /// @param none
@@ -188,69 +231,99 @@ namespace simpleHttpServer
         readRequest();
     }
 
+    void SimpleHttpServer::Session::doRead()
+    {
+        // Read a request
+        http::async_read(_socket, _buffer, _req,
+                         [this](boost::system::error_code ec, std::size_t)
+                         {
+                             if (!ec)
+                             {
+                                 handleRequest();
+                             }
+                             else if (ec != boost::asio::error::operation_aborted)
+                             {
+                                 handleRequestError(ec.message());
+                             }
+                         });
+    }
+
     /// @brief read incoming requests from Telegram bot
     /// @param none
     /// @return none
     void SimpleHttpServer::Session::readRequest()
     {
-        spdlog::info("Reading request...");
+        SPDLOG_LOGGER_DEBUG(_sipeto.getLogger(), "Reading request...");
 
         auto self = shared_from_this();
 
-        // Define a lambda function to handle errors during request reading
-        auto onError = [self, this](const std::string &errorMessage)
-        {
-            spdlog::error(errorMessage);
-            // Generate an HTTP response with status 400 Bad Request
-            http::response<http::string_body> badRequestRes{http::status::bad_request, self->_req.version()};
-
-            badRequestRes.set(http::field::server, BOOST_BEAST_VERSION_STRING);
-            badRequestRes.keep_alive(self->_req.keep_alive());
-            badRequestRes.prepare_payload();
-            this->writeResponse(badRequestRes);
-        };
-
-
-        http::async_read(_socket, _buffer, _req,
-                         [self, onError, this](boost::system::error_code ec, std::size_t)
+        http::async_read(_socket, _buffer, _req, [self, this](boost::system::error_code ec, std::size_t bytesTransferred)
                          {
-                             if (ec)
-                             {
-                                 onError("Failed to read request: " + ec.message());
-                                 spdlog::error("Failed to read request: {}", ec.message());
-                                 return;
-                             }
+        if (ec) {
+            handleRequestError("Failed to read request: " + ec.message());
+            return;
+        }
 
-                             if (_req.target().empty() || _req.method() == http::verb::unknown)
-                             {
-                                 onError("Invalid request");
-                                 spdlog::error("Invalid request");
-                                 return;
-                             }
+        // Store the buffer data before it's consumed by the parser
+        std::string requestString(static_cast<const char*>(_buffer.data().data()), _buffer.data().size());
 
-                             self->handleRequest();
-                         });
+        // Create an HTTP request object and parse the received data into it
+        http::request_parser<http::empty_body> parser;
+        boost::beast::error_code parseError;
+        parser.put(_buffer.data(), parseError);
+        if (parseError) {
+            handleRequestError("Failed to parse request: " + parseError.message() + ", request string: " + requestString);
+            return;
+        }
+        _req = parser.release();
 
-        /// NOTE: remove theses lines
-        _sipeto.getLogger()->debug("Raw request data: {}", std::string(boost::beast::buffers_to_string(_buffer.data())));
-        exit(1);
+        if (_req.target().empty() || _req.method() == http::verb::unknown) {
+            handleRequestError("Invalid request: missing target or unknown method");
+            return;
+        }
+
+        switch (_req.method()) {
+            case http::verb::get:
+                self->handleRequest();
+                break;
+            default:
+                handleMethodNotAllowed();
+                break;
+        }
+
+        SPDLOG_LOGGER_DEBUG(_sipeto.getLogger(), "Read {} bytes of request data", bytesTransferred);
+
+        // If the entire request data has not been read, continue reading asynchronously
+        if (_req.need_eof()) {
+            return;
+        } else {
+            readRequest();
+        } });
     }
 
-    /// @brief accept connections from Telegram bot
-    /// @param none
+    /// @brief handle errors in incoming requests from Telegram bot.
+    /// @param error message
     /// @return none
-    void SimpleHttpServer::Session::acceptConnections()
+    void SimpleHttpServer::Session::handleRequestError(const std::string &errorMessage)
     {
-        _acceptor.async_accept(
-            [this](boost::system::error_code ec, tcp::socket socket)
-            {
-                if (!ec)
-                {
-                    auto new_session = std::make_shared<Session>(std::move(socket), _sipeto, _acceptor);
-                    new_session->start();
-                }
-                acceptConnections();
-            });
+        SPDLOG_LOGGER_ERROR(_sipeto.getLogger(), errorMessage);
+
+        // Generate an HTTP response with status 400 Bad Request
+        http::response<http::string_body> badRequestRes{http::status::bad_request, _req.version()};
+        badRequestRes.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        badRequestRes.keep_alive(_req.keep_alive());
+        badRequestRes.prepare_payload();
+        writeResponse(badRequestRes);
+    }
+
+    void SimpleHttpServer::Session::handleMethodNotAllowed()
+    {
+        // Generate an HTTP response with status 405 Method Not Allowed
+        http::response<http::string_body> methodNotAllowedRes{http::status::method_not_allowed, _req.version()};
+        methodNotAllowedRes.set(http::field::server, BOOST_BEAST_VERSION_STRING);
+        methodNotAllowedRes.keep_alive(_req.keep_alive());
+        methodNotAllowedRes.prepare_payload();
+        writeResponse(methodNotAllowedRes);
     }
 
     /// @brief handle incoming requests from Telegram bot
@@ -271,7 +344,7 @@ namespace simpleHttpServer
         {
             spdlog::info("Received HTTP request");
             // Process request using Sipeto class (existing implementation)
-            std::string result = _sipeto.processRequest(_req.body());
+            std::string result = _sipeto.processRequest(_reqString.body());
 
             // Generate the HTTP response (existing implementation)
             http::response<http::string_body> res{http::status::ok, _req.version()};
@@ -330,7 +403,7 @@ namespace simpleHttpServer
         Json::CharReaderBuilder builder;
         Json::Value update;
         std::string errors;
-        std::istringstream ss(_req.body());
+        std::istringstream ss(_reqString.body());
         if (!Json::parseFromStream(builder, ss, &update, &errors))
         {
             // If parsing fails, return an HTTP response with status 400 Bad Request
