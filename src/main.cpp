@@ -1,4 +1,5 @@
-#include "sipeto.h"
+#include "include/sipeto.h"
+#include "include/twitter.h"
 
 using namespace std;
 using namespace sipeto;
@@ -8,6 +9,9 @@ using namespace simpleHttpServer;
 int main(int argc, char **argv)
 {
     Sipeto sipeto;
+    twitter::Twitter twitter(sipeto.getFromConfigMap("twitter_api_url"), sipeto);
+    twitter.downloadMedia();
+
     // set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
 

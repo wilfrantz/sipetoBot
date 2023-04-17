@@ -38,8 +38,8 @@ namespace twitter
         std::map<std::string, std::string> _attributes;
         static std::shared_ptr<spdlog::logger> _logger;
 
-        std::string Twitter::MEDIA_URL = "<insert_media_file_url_here>";
-        const std::string Twitter::API_URL = _sipeto.getFromConfigMap("twitter_api_url");
+        std::string MEDIA_URL = "<insert_media_file_url_here>";
+        const std::string API_URL = _sipeto.getFromConfigMap("twitter_api_url");
 
         static size_t writeCallback(char *ptr, size_t size,
                                     size_t nmemb,

@@ -1,4 +1,4 @@
-#include "sipeto.h"
+#include "include/sipeto.h"
 
 namespace sipeto
 {
@@ -138,6 +138,7 @@ namespace sipeto
     /// return none.
     void Sipeto::setLogLevel(const std::string &level)
     {
+        _logger->debug("Setting log level to: {}", level);
         spdlog::level::level_enum log_level;
 
         switch (hash(level.c_str()))
@@ -167,6 +168,8 @@ namespace sipeto
 
         spdlog::set_level(log_level);
         spdlog::stdout_color_mt("sipeto");
+
+        _logger->debug("Log level set to: {}", level);
     }
 
     void Sipeto::sendMessage(std::string chat_id, std::string text)

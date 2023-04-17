@@ -37,7 +37,6 @@ namespace twitter
         {
             std::cerr << "Error performing API request: " << curl_easy_strerror(res) << std::endl;
             return ReturnCode::ApiRequestError;
-            return;
         }
 
         /// TODO: Parse the JSON response
@@ -107,7 +106,7 @@ namespace twitter
 
     Twitter::~Twitter()
     {
-        _logger->debug("Twitter destructor");
+        _logger->debug("Twitter destructor."); 
     } // !Twitter::~Twitter
 
 } // !namespace twitter

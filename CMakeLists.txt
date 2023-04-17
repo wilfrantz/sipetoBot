@@ -18,8 +18,10 @@ add_compile_definitions(ENGINE_VERSION="${PROJECT_VERSION}")
 
 add_executable(${PROJECT_NAME}
   src/main.cpp
-  src/sipeto.cpp
-  src/simple_http_server.cpp
+  src/sipeto.cpp 
+  src/twitter.cpp 
+  src/media_downloader.cpp
+  src/simple_http_server.cpp 
 )
 
 set(CMAKE_OSX_SYSROOT /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX13.3.sdk)
