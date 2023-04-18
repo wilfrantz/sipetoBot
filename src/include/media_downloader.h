@@ -20,6 +20,10 @@ namespace mediaDownloader
         };
 
         virtual ReturnCode downloadMedia() = 0;
+        virtual std::string makeHttpRequest(const std::string &url,
+                                    const std::string &method = "GET",
+                                    const std::string &data = {},
+                                    const std::map<std::string, std::string> &headers = {});
 
         static std::shared_ptr<spdlog::logger> _logger;
 

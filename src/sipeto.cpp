@@ -2,17 +2,17 @@
 
 namespace sipeto
 {
-    std::shared_ptr<spdlog::logger> Sipeto::_logger = spdlog::stdout_color_mt("console");
+    std::shared_ptr<spdlog::logger> Sipeto::_logger = spdlog::stdout_color_mt("Sipeto");
 
     Sipeto::Sipeto(const std::string &configFIle) : _configFile(configFIle)
     {
         // load configuration map
         loadConfig();
 
-        _logger = spdlog::get(getFromConfigMap("project"));
+        _logger = spdlog::get("Sipeto");
         if (!_logger)
         {
-            _logger = spdlog::stdout_color_mt(getFromConfigMap("project"));
+            _logger = spdlog::stdout_color_mt("Sipeto");
         }
     }
 
@@ -23,13 +23,16 @@ namespace sipeto
     {
         if (_configFile.empty())
         {
-            spdlog::error("Configuration file is empty.");
+            _logger->error("Configuration file is empty.");
             exit(1);
         }
+
         try
         {
             _logger->debug("Loading configuration file: {}.", _configFile);
+
             std::ifstream file(_configFile);
+
             if (!file.is_open())
             {
                 throw std::runtime_error("Could not open config file.");
@@ -48,6 +51,7 @@ namespace sipeto
                 {
                     throw std::runtime_error("Invalid format for object in configuration file.");
                 }
+
                 for (auto const &key : object.getMemberNames())
                 {
                     const auto &value = object[key];
@@ -169,7 +173,7 @@ namespace sipeto
         spdlog::set_level(log_level);
         spdlog::stdout_color_mt("sipeto");
 
-        _logger->debug("Log level set to: {}", level);
+        _logger->info("Log level set to: {}", level);
     }
 
     void Sipeto::sendMessage(std::string chat_id, std::string text)

@@ -13,6 +13,7 @@ namespace twitter
         : MEDIA_URL(mediaUrl), _sipeto(sipeto)
     {
         _logger->debug("Twitter constructor");
+        API_URL = _sipeto.getFromConfigMap("api_url");
     }
 
     MediaDownloader::ReturnCode Twitter::downloadMedia()
@@ -67,33 +68,67 @@ namespace twitter
     {
         _logger->debug("Getting media attributes for URL: {}", url);
 
-        std::string json_data = "{'title': 'Example Media', 'author': 'John Smith', 'length': '10:30'}";
+        // Define the regular expression for a Twitter link
+        static const boost::regex twitterRegex("(https?:\\/\\/)?(www\\.)?twitter\\.com\\/([^\\/]+)\\/status\\/([^\\/?]+)");
 
+        // Match the URL against the regular expression
+        boost::smatch match;
+        if (!boost::regex_match(url, match, twitterRegex))
+        {
+            _logger->error("Invalid Twitter link: {}", url);
+            return;
+        }
+
+        // Extract the username and tweet ID from the matched groups
+        const std::string username = match[3];
+        const std::string tweetId = match[4];
+
+        // Construct the URL for the Twitter API endpoint that returns media information
+        const std::string apiUrl = "https://api.twitter.com/2/tweets/" + tweetId + "?expansions=attachments.media_keys&media.fields=duration_ms,height,media_key,preview_image_url,type,url,width&tweet.fields=public_metrics&user.fields=public_metrics,username";
+
+        // Make an HTTP request to the Twitter API to get the media information
+        const std::string responseData = makeHttpRequest(apiUrl, {}, {}, {{"Authorization", "Bearer " + _bearerToken}});
+        if (responseData.empty())
+        {
+            _logger->error("Failed to get media attributes from Twitter API");
+            return;
+        }
+
+        // Parse the JSON response from the Twitter API
         Json::Value root;
         Json::Reader reader;
-        if (!reader.parse(json_data, root))
+        if (!reader.parse(responseData, root))
         {
-            spdlog::error("Failed to parse media attributes JSON data");
+            _logger->error("Failed to parse media attributes JSON data");
             return;
         }
 
-        // Extract the attributes from the JSON data and store them in the map
-        if (!root.isObject())
+        // Extract the media information from the JSON data and store it in the map
+        const Json::Value &media = root["includes"]["media"][0];
+        if (media.empty())
         {
-            spdlog::error("Invalid media attributes JSON data format: root is not an object");
+            _logger->error("Failed to get media attributes from Twitter API");
             return;
         }
 
-        for (const auto &key : root.getMemberNames())
+        _attributes["type"] = media["type"].asString();
+        _attributes["url"] = media["url"].asString();
+
+        if (media["type"] == "video")
         {
-            const auto &value = root[key];
-            if (!value.isString())
-            {
-                spdlog::warn("Ignoring non-string value for media attribute: {}", key);
-                continue;
-            }
-            _attributes[key] = value.asString();
+            _attributes["duration"] = std::to_string(media["duration_ms"].asInt() / 1000);
         }
+        else
+        {
+            _attributes["duration"] = "0";
+        }
+
+        _attributes["width"] = std::to_string(media["width"].asInt());
+        _attributes["height"] = std::to_string(media["height"].asInt());
+        _attributes["preview_url"] = media["preview_image_url"].asString();
+
+        _attributes["username"] = root["data"]["author_id"].asString();
+        _attributes["tweet_id"] = root["data"]["id"].asString();
 
         _logger->debug("Finished getting media attributes for URL: {}", url);
     }
@@ -106,7 +141,7 @@ namespace twitter
 
     Twitter::~Twitter()
     {
-        _logger->debug("Twitter destructor."); 
+        _logger->debug("Twitter destructor.");
     } // !Twitter::~Twitter
 
 } // !namespace twitter

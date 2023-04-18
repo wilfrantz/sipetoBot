@@ -3,20 +3,23 @@
 
 using namespace std;
 using namespace sipeto;
+using namespace twitter;
 using namespace boost::asio;
 using namespace simpleHttpServer;
 
 int main(int argc, char **argv)
 {
     Sipeto sipeto;
-    twitter::Twitter twitter(sipeto.getFromConfigMap("twitter_api_url"), sipeto);
-    twitter.downloadMedia();
-
-    // set log level (debug, info, warn, error, critical, or off)
+    /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
 
-    // Display program information message
     sipeto.displayInfo();
+
+    Twitter twitter(sipeto.getFromConfigMap("api_url"), sipeto);
+
+    // twitter.downloadMedia();
+    twitter.getMediaAttributes(sipeto.getFromConfigMap("media_url"));
+    exit(0);
 
     boost::asio::io_context ioc{1};
     auto address = ip::make_address(sipeto.getFromConfigMap("address"));

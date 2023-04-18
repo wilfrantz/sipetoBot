@@ -46,6 +46,7 @@
 #include <mutex>
 #include <chrono>
 #include <spdlog/spdlog.h>
+#include <boost/regex.hpp>
 #include <boost/beast.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
