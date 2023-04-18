@@ -6,7 +6,6 @@ using namespace mediaDownloader;
 
 namespace twitter
 {
-
     std::shared_ptr<spdlog::logger> Twitter::_logger = spdlog::stdout_color_mt("Twitter");
 
     Twitter::Twitter(const std::string &mediaUrl, Sipeto &sipeto)
@@ -66,16 +65,21 @@ namespace twitter
 
     void Twitter::getMediaAttributes(const std::string &url)
     {
-        _logger->debug("Getting media attributes for URL: {}", url);
 
         // Define the regular expression for a Twitter link
-        static const boost::regex twitterRegex("(https?:\\/\\/)?(www\\.)?twitter\\.com\\/([^\\/]+)\\/status\\/([^\\/?]+)");
+        // static const std::regex twitterRegex("(https?:\\/\\/)?(www\\.)?twitter\\.com\\/([^\\/]+)\\/status\\/([^\\/?]+)");
+        const std::regex twitterRegex(R"(https?://)?(www\.)?twitter\.com/([^/]+)/status/([^/?]+))");
+
+        // Convert the URL to lowercase before matching it against the regex
+        const std::string lowerUrl = boost::algorithm::to_lower_copy(url);
+
+        _logger->debug("Getting media attributes for URL: {}", lowerUrl);
 
         // Match the URL against the regular expression
-        boost::smatch match;
-        if (!boost::regex_match(url, match, twitterRegex))
+        std::smatch match;
+        if (!std::regex_match(lowerUrl, match, twitterRegex))
         {
-            _logger->error("Invalid Twitter link: {}", url);
+            _logger->error("Invalid Twitter link: {}", lowerUrl);
             return;
         }
 

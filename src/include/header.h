@@ -51,6 +51,7 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
+#include <boost/algorithm/string.hpp>
 #include <spdlog/sinks/stdout_color_sinks.h>
 
 
