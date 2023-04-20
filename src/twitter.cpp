@@ -26,7 +26,7 @@ namespace twitter
         // Set up the API request
         std::string apiUrl = API_URL + _mediaId;
         curl_easy_setopt(curl, CURLOPT_URL, apiUrl.c_str());
-        std::string authHeader = "Authorization: Bearer " + _bearerToken;
+        std::string authHeader = "Authorization: Bearer " + _sipeto.getFromConfigMap("bearer_token");
         curl_slist *headers = nullptr;
         headers = curl_slist_append(headers, authHeader.c_str());
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
@@ -65,15 +65,11 @@ namespace twitter
 
     void Twitter::getMediaAttributes(const std::string &url)
     {
-
-        // Define the regular expression for a Twitter link
-        // static const std::regex twitterRegex("(https?:\\/\\/)?(www\\.)?twitter\\.com\\/([^\\/]+)\\/status\\/([^\\/?]+)");
-        const std::regex twitterRegex(R"(https?://)?(www\.)?twitter\.com/([^/]+)/status/([^/?]+))");
-
-        // Convert the URL to lowercase before matching it against the regex
         const std::string lowerUrl = boost::algorithm::to_lower_copy(url);
-
         _logger->debug("Getting media attributes for URL: {}", lowerUrl);
+
+        // define regular expression for a twitter link
+        const std::regex twitterRegex(R"(https?://(?:www\.)?twitter\.com/([^/]+)/status/(\d+)(?:\?.*)?)");
 
         // Match the URL against the regular expression
         std::smatch match;
@@ -83,15 +79,25 @@ namespace twitter
             return;
         }
 
-        // Extract the username and tweet ID from the matched groups
-        const std::string username = match[3];
-        const std::string tweetId = match[4];
+        // Extract the username and tweet ID from the matched groups, if available
+        if (!match.size() >= 3)
+        {
+            _logger->error("Could not extract username and tweet ID from URL: {}", lowerUrl);
+        }
+        const std::string username = match[1];
+        const std::string tweetId = match[2];
+
+        /// NOTE: remove these debug statements.
+        _logger->debug("Username: {}", username);
+        _logger->debug("Tweet ID: {}", tweetId);
 
         // Construct the URL for the Twitter API endpoint that returns media information
-        const std::string apiUrl = "https://api.twitter.com/2/tweets/" + tweetId + "?expansions=attachments.media_keys&media.fields=duration_ms,height,media_key,preview_image_url,type,url,width&tweet.fields=public_metrics&user.fields=public_metrics,username";
+        const std::string &apiUrl(_sipeto.getFromConfigMap("media_endpoint") + tweetId + "?expansions=public_metrics&media.fields=preview_image_url,public_metrics");
 
         // Make an HTTP request to the Twitter API to get the media information
-        const std::string responseData = makeHttpRequest(apiUrl, {}, {}, {{"Authorization", "Bearer " + _bearerToken}});
+        const std::string responseData = makeHttpRequest(apiUrl, {}, {}, {{"Authorization", "Bearer " + _sipeto.getFromConfigMap("bearer_token")}});
+        exit(0);
+
         if (responseData.empty())
         {
             _logger->error("Failed to get media attributes from Twitter API");

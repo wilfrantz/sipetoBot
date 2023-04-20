@@ -32,7 +32,7 @@ namespace twitter
 
     private:
         Sipeto &_sipeto;
-        std::string _bearerToken{"token"};
+        // std::string _bearerToken{"token"};
         const std::string &_mediaId{"id"};
         const std::string &_outputFilePath{"path"};
         std::map<std::string, std::string> _attributes;
@@ -44,6 +44,14 @@ namespace twitter
         static size_t writeCallback(char *ptr, size_t size,
                                     size_t nmemb,
                                     std::string *data);
+
+        /// TODO: to load array related to each social media from config file.
+        std::map<std::string, std::string> _configMap;
+
+        /** 
+         * @brief: There are four possible category values: 
+         * AMPLIFY_VIDEO, TWEET_GIF, TWEET_IMAGE, and TWEET_VIDEO.
+        **/
 
 #ifdef twitterTest
         friend class twitterTest;

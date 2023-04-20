@@ -37,6 +37,7 @@ namespace mediaDownloader
         std::string protocol, hostname, port, path;
         std::istringstream iss(url);
         iss >> protocol >> std::ws >> hostname >> std::ws >> port >> std::ws >> path;
+
         if (protocol.empty() || hostname.empty() || path.empty())
         {
             throw std::invalid_argument("Invalid URL: " + url);
