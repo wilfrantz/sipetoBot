@@ -84,6 +84,10 @@ namespace twitter
         {
             _logger->error("Could not extract username and tweet ID from URL: {}", lowerUrl);
         }
+        for (size_t i = 0; i < match.size(); ++i)
+        {
+            _logger->debug("Match {}: {}", i, match[i].str());
+        }
         const std::string username = match[1];
         const std::string tweetId = match[2];
 
@@ -95,7 +99,9 @@ namespace twitter
         const std::string &apiUrl(_sipeto.getFromConfigMap("media_endpoint") + tweetId + "?expansions=public_metrics&media.fields=preview_image_url,public_metrics");
 
         // Make an HTTP request to the Twitter API to get the media information
-        const std::string responseData = makeHttpRequest(apiUrl, {}, {}, {{"Authorization", "Bearer " + _sipeto.getFromConfigMap("bearer_token")}});
+        // const std::string responseData = makeHttpRequest(apiUrl, {}, {}, {{"Authorization", "Bearer " + _sipeto.getFromConfigMap("bearer_token")}});
+        const std::string responseData = performHttpGetRequest("https://jsonplaceholder.typicode.com/posts/1", "");
+
         exit(0);
 
         if (responseData.empty())
@@ -147,6 +153,48 @@ namespace twitter
     {
         data->append(ptr, size * nmemb);
         return size * nmemb;
+    }
+    // Define a function to perform an HTTP GET request using libcurl
+    std::string Twitter::performHttpGetRequest(const std::string &url, const std::string &bearerToken)
+    {
+        // Initialize the libcurl library
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+
+        // Create a new curl session
+        CURL *curl = curl_easy_init();
+        if (!curl)
+        {
+            throw std::runtime_error("Failed to initialize curl");
+        }
+
+        _logger->debug("performing HTTP GET request to URL: {}", url);
+
+        std::string response;
+
+        // Set the curl session options
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, ("Authorization: Bearer " + bearerToken).c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response); 
+
+        // Perform the HTTP GET request
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK)
+        {
+            throw std::runtime_error("Failed to perform curl request: " + std::string(curl_easy_strerror(res)));
+        }
+
+        // Cleanup and return the HTTP response
+        curl_easy_cleanup(curl);
+        curl_slist_free_all(headers);
+        curl_global_cleanup();
+
+        _logger->debug("Finished performing HTTP GET request to URL: {}", url);
+        _logger->debug("Response: {}", response);
+
+        return response;
     }
 
     Twitter::~Twitter()

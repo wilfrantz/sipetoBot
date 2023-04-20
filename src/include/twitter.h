@@ -10,6 +10,8 @@
  * them as plain text strings.
  */
 
+/// NOTE: https://developer.twitter.com/en/docs/twitter-ads-api/creatives/guides/identifying-media
+
 #include "sipeto.h"
 #include "media_downloader.h"
 
@@ -25,6 +27,8 @@ namespace twitter
         Twitter(const std::string &mediaUrl, Sipeto &sipeto);
 
         void getMediaAttributes(const std::string &url);
+        std::string performHttpGetRequest(const std::string &url,
+                                          const std::string &bearerToken);
 
         ReturnCode downloadMedia() override;
 
@@ -41,9 +45,15 @@ namespace twitter
         std::string API_URL = "URL";
         std::string MEDIA_URL = "<insert_media_file_url_here>";
 
-        static size_t writeCallback(char *ptr, size_t size,
+        static size_t writeCallback(char *ptr,
+                                    size_t size,
                                     size_t nmemb,
                                     std::string *data);
+
+        static size_t handleResponse(void *contents,
+                                     size_t size,
+                                     size_t nmemb,
+                                     std::string *response);
 
         /// TODO: to load array related to each social media from config file.
         std::map<std::string, std::string> _configMap;
