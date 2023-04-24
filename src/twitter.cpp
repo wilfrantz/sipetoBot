@@ -84,6 +84,7 @@ namespace twitter
         {
             _logger->error("Could not extract username and tweet ID from URL: {}", lowerUrl);
         }
+
         for (size_t i = 0; i < match.size(); ++i)
         {
             _logger->debug("Match {}: {}", i, match[i].str());
@@ -91,18 +92,12 @@ namespace twitter
         const std::string username = match[1];
         const std::string tweetId = match[2];
 
-        /// NOTE: remove these debug statements.
-        _logger->debug("Username: {}", username);
-        _logger->debug("Tweet ID: {}", tweetId);
-
         // Construct the URL for the Twitter API endpoint that returns media information
-        const std::string &apiUrl(_sipeto.getFromConfigMap("media_endpoint") + tweetId + "?expansions=public_metrics&media.fields=preview_image_url,public_metrics");
+        const std::string &apiUrl(_sipeto.getFromConfigMap("api_url") + tweetId + "&expansions=public_metrics&media.fields=preview_image_url,public_metrics");
 
         // Make an HTTP request to the Twitter API to get the media information
         // const std::string responseData = makeHttpRequest(apiUrl, {}, {}, {{"Authorization", "Bearer " + _sipeto.getFromConfigMap("bearer_token")}});
-        const std::string responseData = performHttpGetRequest("https://jsonplaceholder.typicode.com/posts/1", "");
-
-        exit(0);
+        const std::string responseData = performHttpGetRequest(apiUrl, _sipeto.getFromConfigMap("bearer_token"));
 
         if (responseData.empty())
         {
@@ -116,6 +111,24 @@ namespace twitter
         if (!reader.parse(responseData, root))
         {
             _logger->error("Failed to parse media attributes JSON data");
+            return;
+        }
+
+        // check for errors in the JSON response.
+        if (root.isMember("errors"))
+        {
+            const Json::Value &error = root["errors"];
+            if (error.isArray())
+            {
+                for (const auto &e : error)
+                {
+                    _logger->error("Error : {}", e["message"].asString());
+                }
+            }
+            else
+            {
+                _logger->error("Error : {}", error["message"].asString());
+            }
             return;
         }
 
@@ -154,7 +167,9 @@ namespace twitter
         data->append(ptr, size * nmemb);
         return size * nmemb;
     }
-    // Define a function to perform an HTTP GET request using libcurl
+
+    // Define a function to perform an HTTP GET request using libcurl.
+    /// NOTE: it needs to be a member of media downloader class.
     std::string Twitter::performHttpGetRequest(const std::string &url, const std::string &bearerToken)
     {
         // Initialize the libcurl library
@@ -192,7 +207,6 @@ namespace twitter
         curl_global_cleanup();
 
         _logger->debug("Finished performing HTTP GET request to URL: {}", url);
-        _logger->debug("Response: {}", response);
 
         return response;
     }

@@ -50,11 +50,6 @@ namespace twitter
                                     size_t nmemb,
                                     std::string *data);
 
-        static size_t handleResponse(void *contents,
-                                     size_t size,
-                                     size_t nmemb,
-                                     std::string *response);
-
         /// TODO: to load array related to each social media from config file.
         std::map<std::string, std::string> _configMap;
 
