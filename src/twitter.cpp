@@ -192,7 +192,7 @@ namespace twitter
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
         curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
-        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response); 
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
         // Perform the HTTP GET request
         CURLcode res = curl_easy_perform(curl);

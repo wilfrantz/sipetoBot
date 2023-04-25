@@ -20,6 +20,7 @@ add_executable(${PROJECT_NAME}
   src/main.cpp
   src/sipeto.cpp 
   src/twitter.cpp 
+  src/instagram.cpp
   src/media_downloader.cpp
   src/simple_http_server.cpp 
 )

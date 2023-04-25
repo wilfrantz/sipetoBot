@@ -54,7 +54,7 @@ namespace twitter
         std::map<std::string, std::string> _configMap;
 
         /** 
-         * @brief: There are four possible category values: 
+         * NOTE: There are four possible category values: 
          * AMPLIFY_VIDEO, TWEET_GIF, TWEET_IMAGE, and TWEET_VIDEO.
         **/
 

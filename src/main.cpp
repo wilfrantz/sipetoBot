@@ -1,9 +1,11 @@
 #include "include/sipeto.h"
 #include "include/twitter.h"
+#include "include/instagram.h"
 
 using namespace std;
 using namespace sipeto;
 using namespace twitter;
+using namespace instagram;
 using namespace boost::asio;
 using namespace simpleHttpServer;
 
@@ -16,6 +18,7 @@ int main(int argc, char **argv)
     sipeto.displayInfo();
 
     Twitter twitter(sipeto.getFromConfigMap("api_url"), sipeto);
+    Instagram instagram(sipeto.getFromConfigMap("api_url"), sipeto);
 
     // twitter.downloadMedia();
     twitter.getMediaAttributes(sipeto.getFromConfigMap("media_url"));
