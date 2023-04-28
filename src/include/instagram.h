@@ -25,11 +25,14 @@ namespace instagram
         Instagram(const std::string &mediaUrl, Sipeto &sipeto);
 
         ReturnCode downloadMedia() override;
+        void getMediaAttributes(const std::string &url);
 
         ~Instagram();
 
     private:
         Sipeto &_sipeto;
+        std::string downloadedData;
+        std::map<std::string, std::string> _attributes;
         static std::shared_ptr<spdlog::logger> _logger;
         std::string MEDIA_URL = "<insert_media_file_url_here>";
     };

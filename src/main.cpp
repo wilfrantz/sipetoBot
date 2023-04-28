@@ -17,12 +17,14 @@ int main(int argc, char **argv)
 
     sipeto.displayInfo();
 
-    Twitter twitter(sipeto.getFromConfigMap("api_url"), sipeto);
+    // Twitter twitter(sipeto.getFromConfigMap("api_url"), sipeto);
     Instagram instagram(sipeto.getFromConfigMap("api_url"), sipeto);
+    instagram.getMediaAttributes(sipeto.getFromConfigMap("instagramMedia2"));
+    exit(0);
 
     // twitter.downloadMedia();
-    twitter.getMediaAttributes(sipeto.getFromConfigMap("media_url"));
-    exit(0);
+    // twitter.getMediaAttributes(sipeto.getFromConfigMap("media_url"));
+    // exit(0);
 
     boost::asio::io_context ioc{1};
     auto address = ip::make_address(sipeto.getFromConfigMap("address"));

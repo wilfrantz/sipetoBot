@@ -110,6 +110,53 @@ namespace mediaDownloader
         return response;
     }
 
+    size_t MediaDownloader::writeCallback(char *ptr, size_t size, size_t nmemb, std::string *data)
+    {
+        data->append(ptr, size * nmemb);
+        return size * nmemb;
+    }
+
+    std::string MediaDownloader::performHttpGetRequest(const std::string &url, const std::string &bearerToken)
+    {
+        // Initialize the libcurl library
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+
+        // Create a new curl session
+        CURL *curl = curl_easy_init();
+        if (!curl)
+        {
+            throw std::runtime_error("Failed to initialize curl");
+        }
+
+        _logger->debug("performing HTTP GET request to URL: {}", url);
+
+        std::string response;
+
+        // Set the curl session options
+        struct curl_slist *headers = NULL;
+        headers = curl_slist_append(headers, ("Authorization: Bearer " + bearerToken).c_str());
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+        curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeCallback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+        // Perform the HTTP GET request
+        CURLcode res = curl_easy_perform(curl);
+        if (res != CURLE_OK)
+        {
+            throw std::runtime_error("Failed to perform curl request: " + std::string(curl_easy_strerror(res)));
+        }
+
+        // Cleanup and return the HTTP response
+        curl_easy_cleanup(curl);
+        curl_slist_free_all(headers);
+        curl_global_cleanup();
+
+        _logger->debug("Finished performing HTTP GET request to URL: {}", url);
+
+        return response;
+    }
+
     MediaDownloader::~MediaDownloader()
     {
         _logger->debug("MediaDownloader destructor");

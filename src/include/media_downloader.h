@@ -14,9 +14,10 @@ namespace mediaDownloader
         enum class ReturnCode
         {
             Ok,
+            InvalidMediaUrl,
             ApiRequestError,
             MediaDownloadError,
-            MediaAttributesParseError
+            MediaAttributesParseError,
         };
 
         virtual ReturnCode downloadMedia() = 0;
@@ -25,7 +26,15 @@ namespace mediaDownloader
                                     const std::string &data = {},
                                     const std::map<std::string, std::string> &headers = {});
 
+        std::string performHttpGetRequest(const std::string &url,
+                                          const std::string &bearerToken);
+
         static std::shared_ptr<spdlog::logger> _logger;
+
+        static size_t writeCallback(char *ptr,
+                                    size_t size,
+                                    size_t nmemb,
+                                    std::string *data);
 
         virtual ~MediaDownloader() = 0;
 
