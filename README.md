@@ -64,7 +64,7 @@ cmake ..
 5- Build the project.
 
 ``` bash
-cmake --build ..
+cmake --build .
 ```
 
 ## Usage
