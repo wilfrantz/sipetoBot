@@ -32,6 +32,7 @@ namespace tiktok
 
     private:
         Sipeto &_sipeto;
+        std::string mediaType = "Unknown media type";
         static std::shared_ptr<spdlog::logger> _logger;
         std::map <std::string, std::string> _attributes;
         std::string MEDIA_URL = "<insert_media_file_url_here>";

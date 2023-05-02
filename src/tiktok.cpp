@@ -49,8 +49,66 @@ namespace tiktok
             return;
         }
 
-        _logger->debug("Response: {}", response);
+        // _logger->debug("Response: {}", response);
         // TODO: Parse the JSON response from the TikTok API
+
+        Json::Value root;
+        Json::Reader reader;
+        if (!reader.parse(response, root))
+        {
+            _logger->error("Failed to parse media attributes JSON data");
+            return;
+        }
+
+        // check for errors in the JSON response.
+        if (root.isMember("errors"))
+        {
+            const Json::Value &error = root["errors"];
+            if (error.isArray())
+            {
+                for (const Json::Value &value : error)
+                {
+                    if (value.isMember("message"))
+                    {
+                        _logger->error("TikTok API error: {}", value["message"].asString());
+                    }
+                }
+            }
+            return;
+        }
+
+        // check for the media type.
+        if (root.isMember("itemInfo") && root["itemInfo"].isMember("itemStruct"))
+        {
+            const Json::Value &itemStruct = root["itemInfo"]["itemStruct"];
+            if (itemStruct.isMember("video"))
+            {
+                this->mediaType = "video";
+                const Json::Value &video = itemStruct["video"];
+                if (video.isMember("videoMeta"))
+                {
+                    _logger->debug("Video meta: {}", video["videoMeta"].toStyledString());
+                    const Json::Value &videoMeta = video["videoMeta"];
+                    if (videoMeta.isMember("height") && videoMeta.isMember("width"))
+                    {
+                        _attributes["height"] = std::to_string(videoMeta["height"].asInt());
+                        _attributes["width"] = std::to_string(videoMeta["width"].asInt());
+                    }
+                }
+            }
+            else if (itemStruct.isMember("music"))
+            {
+                this->mediaType = "music";
+                _attributes["height"] = "0";
+                _attributes["width"] = "0";
+            }
+            else
+            {
+                _logger->error("{}", this->mediaType);
+                return;
+            }
+        }
+        _logger->info("Media type: {}", this->mediaType);
 
         // Log the message that the function finished getting media attributes
         _logger->debug("Finished getting media attributes for TikTok URL: {}", url);
