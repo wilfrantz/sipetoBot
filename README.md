@@ -1,5 +1,8 @@
 # Social Media Downloader Bot
 
+![Sipeto](/lander/favicon.ico)
+
+
 The Social Media Downloader Bot is a powerful tool for downloading media from social media links.
 
 ## Prerequisites
