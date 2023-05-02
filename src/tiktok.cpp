@@ -38,10 +38,9 @@ namespace tiktok
         }
 
         // contruct the url for the API request.
-        const std::string API_URL = _sipeto.getFromConfigMap("metaUrl") + videoId;
-
-        const std::string response = TikTok::performHttpGetRequest(videoId, _sipeto.getFromConfigMap("client_key"));
+        // const std::string API_URL = _sipeto.getFromConfigMap("metaUrl") + videoId;
         // const std::string response = TikTok::getVideoMetadata(videoId, _sipeto.getFromConfigMap("client_key"));
+        const std::string response = TikTok::performHttpGetRequest(videoId, _sipeto.getFromConfigMap("client_key"));
 
         if (response.empty())
         {
@@ -132,7 +131,7 @@ namespace tiktok
 
         if (curl)
         {
-            std::string url = _sipeto.getFromConfigMap("metaUrl") + videoId;
+            std::string url = _sipeto.getFromConfigMap("metaEndpoint") + videoId;
             struct curl_slist *headers = NULL;
 
             headers = curl_slist_append(headers, ("Authorization: Bearer " + bearerToken).c_str());
