@@ -1,9 +1,11 @@
 #include "include/sipeto.h"
+#include "include/tiktok.h"
 #include "include/twitter.h"
 #include "include/instagram.h"
 
 using namespace std;
 using namespace sipeto;
+using namespace tiktok;
 using namespace twitter;
 using namespace instagram;
 using namespace boost::asio;
@@ -15,12 +17,14 @@ int main(int argc, char **argv)
     /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
 
-    sipeto.displayInfo();
+    // sipeto.displayInfo();
+    TikTok tiktok(sipeto.getFromConfigMap("tiktokMediaUrl"), sipeto);
+    tiktok.getMediaAttributes(sipeto.getFromConfigMap("tiktokMediaUrl"));
+    exit(0);
 
     // Twitter twitter(sipeto.getFromConfigMap("api_url"), sipeto);
-    Instagram instagram(sipeto.getFromConfigMap("api_url"), sipeto);
-    instagram.getMediaAttributes(sipeto.getFromConfigMap("instagramMedia2"));
-    exit(0);
+    // Instagram instagram(sipeto.getFromConfigMap("api_url"), sipeto);
+    // instagram.getMediaAttributes(sipeto.getFromConfigMap("instagramMedia2"));
 
     // twitter.downloadMedia();
     // twitter.getMediaAttributes(sipeto.getFromConfigMap("media_url"));

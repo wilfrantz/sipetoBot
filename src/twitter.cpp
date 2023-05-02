@@ -83,6 +83,7 @@ namespace twitter
         if (!match.size() >= 3)
         {
             _logger->error("Could not extract username and tweet ID from URL: {}", lowerUrl);
+            return;
         }
 
         for (size_t i = 0; i < match.size(); ++i)

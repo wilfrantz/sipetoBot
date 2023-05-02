@@ -21,6 +21,8 @@ namespace mediaDownloader
         };
 
         virtual ReturnCode downloadMedia() = 0;
+        virtual void getMediaAttributes(const std::string &url) = 0;
+
         std::string makeHttpRequest(const std::string &url,
                                     const std::string &method = "GET",
                                     const std::string &data = {},

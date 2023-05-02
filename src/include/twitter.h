@@ -26,7 +26,7 @@ namespace twitter
     public:
         Twitter(const std::string &mediaUrl, Sipeto &sipeto);
 
-        void getMediaAttributes(const std::string &url);
+        void getMediaAttributes(const std::string &url) override;
         std::string performHttpGetRequest(const std::string &url,
                                           const std::string &bearerToken);
 
@@ -43,7 +43,7 @@ namespace twitter
         static std::shared_ptr<spdlog::logger> _logger;
 
         std::string API_URL = "URL";
-        std::string MEDIA_URL = "<insert_media_file_url_here>";
+        std::string MEDIA_URL = "don't change this.";
 
         static size_t writeCallback(char *ptr,
                                     size_t size,

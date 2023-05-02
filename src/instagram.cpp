@@ -96,11 +96,11 @@ namespace instagram
         }
 
         // Construct the URL for the Instagram API endpoint that returns media information
+        // https://graph.instagram.com/{media-id}?fields={fields}&access_token={access-token}
         const std::string apiUrl("https://graph.instagram.com/" + mediaId + "?fields=id,media_type,media_url,thumbnail_url,permalink,timestamp&access_token=" + _sipeto.getFromConfigMap("instagramToken"));
 
-
         // Make an HTTP request to the Instagram API to get the media information
-        const std::string responseData = MediaDownloader::performHttpGetRequest(apiUrl, "");
+        const std::string responseData = MediaDownloader::performHttpGetRequest(apiUrl, "GET");
         _logger->debug("Response data: {}", responseData);
         exit(0);
 
@@ -130,6 +130,6 @@ namespace instagram
 
     Instagram::~Instagram()
     {
+        _logger->debug("Instagram destructor");
     }
-
 }

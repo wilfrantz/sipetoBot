@@ -25,7 +25,7 @@ namespace instagram
         Instagram(const std::string &mediaUrl, Sipeto &sipeto);
 
         ReturnCode downloadMedia() override;
-        void getMediaAttributes(const std::string &url);
+        void getMediaAttributes(const std::string &url) override;
 
         ~Instagram();
 
