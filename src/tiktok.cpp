@@ -22,38 +22,107 @@ namespace tiktok
         std::smatch match;
         if (!std::regex_search(url, match, tiktokRegex))
         {
-            // If the URL doesn't match the regex, log the error message and return
             _logger->error("Invalid TikTok URL: {}", url);
             return;
         }
 
         // Extract the username and tweet ID from the matched groups
-        const std::string username = match[1].str();
-        const std::string videoId = match[2].str();
+        std::string videoId; 
+        std::string username; 
 
-        // Log the extracted username and tweet ID
-        _logger->debug("TikTok username: {}", username);
-        _logger->debug("TikTok video ID: {}", videoId);
-
-        // Initialize libcurl
-        curl_global_init(CURL_GLOBAL_DEFAULT);
-        CURL *curl = curl_easy_init();
-        if (!curl)
+        for (size_t i = 0; i < match.size(); ++i)
         {
-            // If libcurl fails to initialize, log the error message and return
-            _logger->error("Failed to initialize libcurl");
+            _logger->debug("Match {}: {}", i, match[i].str());
+            videoId = match[2].str();
+            username = match[1].str();
+        }
+
+        // contruct the url for the API request.
+        const std::string API_URL = _sipeto.getFromConfigMap("metaUrl") + videoId;
+
+        const std::string response = TikTok::performHttpGetRequest(videoId, _sipeto.getFromConfigMap("client_key"));
+        // const std::string response = TikTok::getVideoMetadata(videoId, _sipeto.getFromConfigMap("client_key"));
+
+        if (response.empty())
+        {
+            _logger->error("Failed to get media attributes from TikTok API");
             return;
         }
 
-        // TODO: Add code to extract media attributes using libcurl.
-        // This may involve making a request to the TikTok API with the video ID.
-
-        // Clean up libcurl
-        curl_easy_cleanup(curl);
-        curl_global_cleanup();
+        _logger->debug("Response: {}", response);
+        // TODO: Parse the JSON response from the TikTok API
 
         // Log the message that the function finished getting media attributes
         _logger->debug("Finished getting media attributes for TikTok URL: {}", url);
+    }
+
+    /**
+     * Performs an HTTP GET request to the specified URL with the specified bearer token.
+     *
+     * @param url The URL to send the request to.
+     * @param bearerToken The bearer token to include in the Authorization header.
+     * @return The response body as a string, or an empty string if an error occurs.
+     */
+    std::string TikTok::performHttpGetRequest(const std::string &videoId, const std::string &bearerToken)
+    {
+        CURL *curl;
+        CURLcode res;
+        std::string response;
+
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+        curl = curl_easy_init();
+
+        if (curl)
+        {
+            std::string url = _sipeto.getFromConfigMap("metaUrl") + videoId;
+            struct curl_slist *headers = NULL;
+
+            headers = curl_slist_append(headers, ("Authorization: Bearer " + bearerToken).c_str());
+            headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0");
+
+            curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, TikTok::writeCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+
+            res = curl_easy_perform(curl);
+
+            if (res != CURLE_OK)
+            {
+                std::cerr << "curl_easy_perform() failed: " << curl_easy_strerror(res) << std::endl;
+                curl_easy_cleanup(curl);
+                curl_slist_free_all(headers);
+                curl_global_cleanup();
+                return "";
+            }
+
+            curl_easy_cleanup(curl);
+            curl_slist_free_all(headers);
+        }
+        else
+        {
+            std::cerr << "CURL init failed!" << std::endl;
+            curl_global_cleanup();
+            return "";
+        }
+
+        curl_global_cleanup();
+        return response;
+    }
+
+
+    /**
+     * Callback function to receive the response body from a libcurl request.
+     * @param ptr The received data.
+     * @param size The size of each data element.
+     * @param nmemb The number of data elements.
+     * @param userdata A pointer to the string to store the response body in.
+     * @return The number of bytes processed (should be size * nmemb).
+     */
+    size_t TikTok::writeCallback(void *contents, size_t size, size_t nmemb, void *userp)
+    {
+        ((std::string *)userp)->append((char *)contents, size * nmemb);
+        return size * nmemb;
     }
 
     MediaDownloader::ReturnCode TikTok::downloadMedia()

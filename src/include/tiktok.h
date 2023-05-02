@@ -17,8 +17,14 @@ namespace tiktok
 
         void getMediaAttributes(const std::string &url) override;
 
-        std::string performHttpGetRequest(const std::string &url,
-                                          const std::string &bearerToken);
+        std::string getVideoMetadata(const std::string &itemId,
+                                     const std::string &bearerToken);
+
+        std::string performHttpGetRequest(const std::string &itemId,
+                                          const std::string &bearerToken = " ") override;
+
+        static size_t writeCallback(void *ptr, size_t size, size_t nmemb,
+                                    void *userdata);
 
         ReturnCode downloadMedia() override;
 
@@ -27,6 +33,7 @@ namespace tiktok
     private:
         Sipeto &_sipeto;
         static std::shared_ptr<spdlog::logger> _logger;
+        std::map <std::string, std::string> _attributes;
         std::string MEDIA_URL = "<insert_media_file_url_here>";
     };
 }

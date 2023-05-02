@@ -28,8 +28,8 @@ namespace mediaDownloader
                                     const std::string &data = {},
                                     const std::map<std::string, std::string> &headers = {});
 
-        std::string performHttpGetRequest(const std::string &url,
-                                          const std::string &bearerToken);
+        virtual std::string performHttpGetRequest(const std::string &url,
+                                                  const std::string &bearerToken);
 
         static std::shared_ptr<spdlog::logger> _logger;
 
