@@ -19,7 +19,8 @@ int main(int argc, char **argv)
 
     // sipeto.displayInfo();
     TikTok tiktok(sipeto.getFromConfigMap("tiktokMediaUrl"), sipeto);
-    tiktok.getMediaAttributes(sipeto.getFromConfigMap("tiktokMediaUrl"));
+    tiktok.downloadMedia();
+    // tiktok.getMediaAttributes(sipeto.getFromConfigMap("tiktokMediaUrl"));
     exit(0);
 
     // Twitter twitter(sipeto.getFromConfigMap("api_url"), sipeto);

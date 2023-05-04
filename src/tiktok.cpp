@@ -14,6 +14,61 @@ namespace tiktok
         _logger->debug("TikTok constructor");
     }
 
+    MediaDownloader::ReturnCode TikTok::downloadMedia()
+    {
+        _logger->debug("Downloading media from TikTok URL: {}", MEDIA_URL);
+
+
+        CURL *curl;
+        CURLcode res;
+        
+        getMediaAttributes(MEDIA_URL);
+
+        std::string filePath(_sipeto.getFromConfigMap("tiktokOutputPath") + _attributes["id"] + ".mp4");
+        std::ofstream outputFile(filePath, std::ios::binary);
+
+        if (!outputFile)
+        {
+            _logger->error("Error opening output file: {}", _sipeto.getFromConfigMap("tiktokOutputPath"));
+            return MediaDownloader::ReturnCode::MediaDownloadError;
+        }
+
+
+        // initialize curl
+        curl_global_init(CURL_GLOBAL_DEFAULT);
+        curl = curl_easy_init();
+
+        if (curl)
+        {
+            curl_easy_setopt(curl, CURLOPT_URL, _attributes["playAddr"].c_str());
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFileCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outputFile);
+
+            res = curl_easy_perform(curl);
+
+            if (res != CURLE_OK)
+            {
+                _logger->error("curl_easy_perform() failed: {}", curl_easy_strerror(res));
+                curl_easy_cleanup(curl);
+                curl_global_cleanup();
+                outputFile.close();
+                return MediaDownloader::ReturnCode::MediaDownloadError;
+            }
+            curl_easy_cleanup(curl);
+        }
+        else
+        {
+            _logger->error("Error initializing curl");
+            curl_global_cleanup();
+            outputFile.close();
+            return MediaDownloader::ReturnCode::MediaDownloadError;
+        }
+
+        outputFile.close();
+        _logger->debug("Media downloaded successfully");
+        return MediaDownloader::ReturnCode::Ok;
+    }
+
     void TikTok::getMediaAttributes(const std::string &url)
     {
         // Define regular expression for TikTok URL
@@ -38,7 +93,6 @@ namespace tiktok
         }
 
         // contruct the url for the API request.
-        // const std::string API_URL = _sipeto.getFromConfigMap("metaUrl") + videoId;
         // const std::string response = TikTok::getVideoMetadata(videoId, _sipeto.getFromConfigMap("client_key"));
         const std::string response = TikTok::performHttpGetRequest(videoId, _sipeto.getFromConfigMap("client_key"));
 
@@ -49,8 +103,8 @@ namespace tiktok
         }
 
         // _logger->debug("Response: {}", response);
-        // TODO: Parse the JSON response from the TikTok API
 
+        // Parse the JSON response from the TikTok API
         Json::Value root;
         Json::Reader reader;
         if (!reader.parse(response, root))
@@ -84,19 +138,18 @@ namespace tiktok
             {
                 this->mediaType = "video";
                 const Json::Value &video = itemStruct["video"];
-                if (video.isMember("videoMeta"))
+                for (const auto &key : video.getMemberNames())
                 {
-                    _logger->debug("Video meta: {}", video["videoMeta"].toStyledString());
-                    const Json::Value &videoMeta = video["videoMeta"];
-                    if (videoMeta.isMember("height") && videoMeta.isMember("width"))
+                    if (video[key].isString())
                     {
-                        _attributes["height"] = std::to_string(videoMeta["height"].asInt());
-                        _attributes["width"] = std::to_string(videoMeta["width"].asInt());
+                        _logger->debug("Video key: {}", key);
+                        _attributes[key] = video[key].asString();
                     }
                 }
             }
             else if (itemStruct.isMember("music"))
             {
+                // TODO: Implement music downloading.
                 this->mediaType = "music";
                 _attributes["height"] = "0";
                 _attributes["width"] = "0";
@@ -182,10 +235,11 @@ namespace tiktok
         return size * nmemb;
     }
 
-    MediaDownloader::ReturnCode TikTok::downloadMedia()
+    size_t TikTok::writeFileCallback(void *contents, size_t size, size_t nmemb, void *userp)
     {
-
-        return MediaDownloader::ReturnCode::Ok;
+        std::ofstream *outputFile = reinterpret_cast<std::ofstream *>(userp);
+        outputFile->write(reinterpret_cast<char *>(contents), size * nmemb);
+        return size * nmemb;
     }
 
     TikTok::~TikTok()

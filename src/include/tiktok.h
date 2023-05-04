@@ -26,6 +26,9 @@ namespace tiktok
         static size_t writeCallback(void *ptr, size_t size, size_t nmemb,
                                     void *userdata);
 
+        static size_t writeFileCallback(void *contents, size_t size, size_t nmemb,
+                                        void *userp);
+
         ReturnCode downloadMedia() override;
 
         ~TikTok();
