@@ -16,13 +16,15 @@ namespace tiktok
 
     MediaDownloader::ReturnCode TikTok::downloadMedia()
     {
-        _logger->debug("Downloading media from TikTok URL: {}", MEDIA_URL);
+        // _logger->debug("Downloading media from TikTok URL: {}", MEDIA_URL);
 
 
         CURL *curl;
         CURLcode res;
-        
+       // get the media attributes. 
         getMediaAttributes(MEDIA_URL);
+        _logger->debug("Downloading media from TikTok URL: {}", _attributes["downloadAddr"]);
+        exit(0);
 
         std::string filePath(_sipeto.getFromConfigMap("tiktokOutputPath") + _attributes["id"] + ".mp4");
         std::ofstream outputFile(filePath, std::ios::binary);
@@ -40,7 +42,7 @@ namespace tiktok
 
         if (curl)
         {
-            curl_easy_setopt(curl, CURLOPT_URL, _attributes["playAddr"].c_str());
+            curl_easy_setopt(curl, CURLOPT_URL, _attributes["downloadAddr"].c_str());
             curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, writeFileCallback);
             curl_easy_setopt(curl, CURLOPT_WRITEDATA, &outputFile);
 
@@ -65,12 +67,22 @@ namespace tiktok
         }
 
         outputFile.close();
-        _logger->debug("Media downloaded successfully");
+        _logger->debug("Media downloaded successfully.");
         return MediaDownloader::ReturnCode::Ok;
     }
 
     void TikTok::getMediaAttributes(const std::string &url)
     {
+        _logger->debug("Getting media attibutes for {}", url);
+        const std::string resp = TikTok::performHttpGetRequest(url);
+        resp.empty() ? _logger->error("Failed to get media attributes from TikTok API") : _logger->debug("Response: {}", resp);
+        exit(0);
+
+        if (resp.empty())
+        {
+            _logger->error("Failed to get media attributes from TikTok API");
+        }
+
         // Define regular expression for TikTok URL
         const std::regex tiktokRegex(R"(https?://(?:www\.)?tiktok\.com/@(\w+)/video/(\d{19}))");
 
@@ -94,7 +106,7 @@ namespace tiktok
 
         // contruct the url for the API request.
         // const std::string response = TikTok::getVideoMetadata(videoId, _sipeto.getFromConfigMap("client_key"));
-        const std::string response = TikTok::performHttpGetRequest(videoId, _sipeto.getFromConfigMap("client_key"));
+        const std::string response = TikTok::performHttpGetRequest(url, _sipeto.getFromConfigMap("client_key"));
 
         if (response.empty())
         {
@@ -102,7 +114,7 @@ namespace tiktok
             return;
         }
 
-        // _logger->debug("Response: {}", response);
+        _logger->debug("Response: {}", response);
 
         // Parse the JSON response from the TikTok API
         Json::Value root;
@@ -130,40 +142,51 @@ namespace tiktok
             return;
         }
 
-        // check for the media type.
+        // sort media by type. 
         if (root.isMember("itemInfo") && root["itemInfo"].isMember("itemStruct"))
         {
             const Json::Value &itemStruct = root["itemInfo"]["itemStruct"];
-            if (itemStruct.isMember("video"))
+            std::map<std::string, const Json::Value *> mediaTypes = {{"video", nullptr}, {"image", nullptr}, {"music", nullptr}};
+
+            /// find the media by type: TODO: needs improvement.
+            for (auto const &mediaType : mediaTypes)
             {
-                this->mediaType = "video";
-                const Json::Value &video = itemStruct["video"];
-                for (const auto &key : video.getMemberNames())
+                if (itemStruct.isMember(mediaType.first))
                 {
-                    if (video[key].isString())
+                    mediaTypes[mediaType.first] = &itemStruct[mediaType.first];
+                    this->mediaType = mediaType.first;
+                    _logger->debug("Media type: {}", this->mediaType);
+
+                    // retrieve attributes
+                    if (mediaTypes[this->mediaType])
                     {
-                        _logger->debug("Video key: {}", key);
-                        _attributes[key] = video[key].asString();
+                        const Json::Value &media = *mediaTypes[this->mediaType];
+                        for (const auto &key : media.getMemberNames())
+                        {
+                            if (media[key].isString())
+                            {
+                                _logger->debug("{} key: {}", this->mediaType, key);
+                                _attributes[key] = media[key].asString();
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _logger->error("Failed to get media attributes from TikTok API");
+                        return;
                     }
                 }
             }
-            else if (itemStruct.isMember("music"))
-            {
-                // TODO: Implement music downloading.
-                this->mediaType = "music";
-                _attributes["height"] = "0";
-                _attributes["width"] = "0";
-            }
-            else
-            {
-                _logger->error("{}", this->mediaType);
-                return;
-            }
-        }
-        _logger->info("Media type: {}", this->mediaType);
 
+        }
         // Log the message that the function finished getting media attributes
         _logger->debug("Finished getting media attributes for TikTok URL: {}", url);
+    }
+
+    // Function to download the content of a web page using Boost.Asio and SSL
+    std::string TikTok::downloadHttpsPage(const std::string &url)
+    {
+        return "";
     }
 
     /**
@@ -173,7 +196,7 @@ namespace tiktok
      * @param bearerToken The bearer token to include in the Authorization header.
      * @return The response body as a string, or an empty string if an error occurs.
      */
-    std::string TikTok::performHttpGetRequest(const std::string &videoId, const std::string &bearerToken)
+    std::string TikTok::performHttpGetRequest(const std::string &url, const std::string &bearerToken)
     {
         CURL *curl;
         CURLcode res;
@@ -184,7 +207,7 @@ namespace tiktok
 
         if (curl)
         {
-            std::string url = _sipeto.getFromConfigMap("metaEndpoint") + videoId;
+            // std::string url = _sipeto.getFromConfigMap("metaEndpoint") + videoId;
             struct curl_slist *headers = NULL;
 
             headers = curl_slist_append(headers, ("Authorization: Bearer " + bearerToken).c_str());

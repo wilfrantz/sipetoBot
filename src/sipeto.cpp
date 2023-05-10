@@ -123,12 +123,16 @@ namespace sipeto
     /// @return none.
     void Sipeto::displayInfo()
     {
-        spdlog::info("Welcome to {} {}.",
-                     getFromConfigMap("project"),
-                     getFromConfigMap("version"));
+        _logger->info("Welcome to {} {}.",
+                      getFromConfigMap("project"),
+                      getFromConfigMap("version"));
 
-        spdlog::info("{}", getFromConfigMap("description"));
-        spdlog::info("Developed by: {}.", getFromConfigMap("author"));
+        _logger->info("{}", getFromConfigMap("description"));
+        _logger->info("Developed by: {}.", getFromConfigMap("author"));
+        _logger->info("Using Boost Version: {}.", BOOST_LIB_VERSION);
+        _logger->info("Using jsoncpp Version: {}.", JSONCPP_VERSION_STRING);
+        _logger->info("Using LibCurl Version: {}.", LIBCURL_VERSION);
+        _logger->info("Using spdlog Version: {}.{}.{}", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 
         // Display the configuration file in debug mode.
         for (const auto &element : _config)
