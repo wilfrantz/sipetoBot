@@ -17,7 +17,7 @@ int main(int argc, char **argv)
     /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
 
-    sipeto.displayInfo();
+    // sipeto.displayInfo();
     TikTok tiktok(sipeto.getFromConfigMap("tiktokUrl"), sipeto);
     tiktok.downloadMedia();
     // tiktok.getMediaAttributes(sipeto.getFromConfigMap("tiktokMediaUrl"));

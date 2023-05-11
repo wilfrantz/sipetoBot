@@ -6,7 +6,7 @@ namespace sipeto
 
     Sipeto::Sipeto(const std::string &configFIle) : _configFile(configFIle)
     {
-        // load configuration map
+        // load configuration map.
         loadConfig();
 
         _logger = spdlog::get("Sipeto");
@@ -123,7 +123,9 @@ namespace sipeto
     /// @return none.
     void Sipeto::displayInfo()
     {
-        _logger->info("Welcome to {} {}.", getFromConfigMap("project"), getFromConfigMap("version"));
+        _logger->info("Welcome to {} {}.",
+                      getFromConfigMap("project"),
+                      getFromConfigMap("version"));
         _logger->info("{}", getFromConfigMap("description"));
         _logger->info("Developed by: {}.", getFromConfigMap("author"));
 
@@ -153,6 +155,13 @@ namespace sipeto
         _logger->debug("Using spdlog Version: {}.{}.{}", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
 #else
         _logger->warn("Could not determine spdlog version.");
+#endif
+
+// Get the OpenSSL version, if available
+#ifdef OPENSSL_VERSION_TEXT
+        _logger->debug("Using OpenSSL Version: {}.", OPENSSL_VERSION_TEXT);
+#else
+        _logger->warn("Could not determine OpenSSL version.");  
 #endif
 
         // Display the configuration file in debug mode.

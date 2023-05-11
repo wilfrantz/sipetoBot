@@ -16,9 +16,6 @@ namespace tiktok
 
     MediaDownloader::ReturnCode TikTok::downloadMedia()
     {
-        // _logger->debug("Downloading media from TikTok URL: {}", MEDIA_URL);
-
-
         CURL *curl;
         CURLcode res;
        // get the media attributes. 
@@ -74,23 +71,28 @@ namespace tiktok
     void TikTok::getMediaAttributes(const std::string &url)
     {
         _logger->debug("Getting media attibutes for {}", url);
-        const std::string resp = TikTok::performHttpGetRequest(url);
-        resp.empty() ? _logger->error("Failed to get media attributes from TikTok API") : _logger->debug("Response: {}", resp);
-        exit(0);
-
-        if (resp.empty())
-        {
-            _logger->error("Failed to get media attributes from TikTok API");
-        }
 
         // Define regular expression for TikTok URL
         const std::regex tiktokRegex(R"(https?://(?:www\.)?tiktok\.com/@(\w+)/video/(\d{19}))");
 
         std::smatch match;
+        std::string longFormatedUrl;
         if (!std::regex_search(url, match, tiktokRegex))
         {
-            _logger->error("Invalid TikTok URL: {}", url);
-            return;
+            longFormatedUrl = TikTok::performHttpGetRequest(url);
+
+            if (longFormatedUrl.empty())
+            {
+                _logger->error("Failed to validate the link.");
+                return;
+            }
+
+            longFormatedUrl = extractTiktokUrl(longFormatedUrl);
+            if (!std::regex_search(longFormatedUrl, match, tiktokRegex))
+            {
+                _logger->error("Invalid TikTok URL: {}", url);
+                return;
+            }
         }
 
         // Extract the username and tweet ID from the matched groups
@@ -106,15 +108,16 @@ namespace tiktok
 
         // contruct the url for the API request.
         // const std::string response = TikTok::getVideoMetadata(videoId, _sipeto.getFromConfigMap("client_key"));
-        const std::string response = TikTok::performHttpGetRequest(url, _sipeto.getFromConfigMap("client_key"));
+        const std::string endpoint = _sipeto.getFromConfigMap("metaEndpoint") + videoId;
+
+        const std::string response = TikTok::performHttpGetRequest(endpoint,
+                                                                   _sipeto.getFromConfigMap("client_key"));
 
         if (response.empty())
         {
             _logger->error("Failed to get media attributes from TikTok API");
             return;
         }
-
-        _logger->debug("Response: {}", response);
 
         // Parse the JSON response from the TikTok API
         Json::Value root;
@@ -183,6 +186,26 @@ namespace tiktok
         _logger->debug("Finished getting media attributes for TikTok URL: {}", url);
     }
 
+    std::string TikTok::extractTiktokUrl(const std::string &html)
+    {
+        std::string url;
+
+        // Define regular expression for TikTok URL
+        std::regex tiktokRegex(R"(<a\s+href="https://www.tiktok.com/@\w+/video/\d+)"
+                               R"((?:\?\S+)?"\s*>Moved Permanently</a>)");
+
+        // Search for the TikTok URL in the HTML code
+        std::smatch match;
+        if (std::regex_search(html, match, tiktokRegex))
+        {
+            // Extract the URL from the matched group
+            url = match[0];
+            // Remove the <a href=" and ">Moved Permanently</a> parts of the string
+            url = url.substr(9, url.length() - 30);
+        }
+
+        return url;
+    }
     // Function to download the content of a web page using Boost.Asio and SSL
     std::string TikTok::downloadHttpsPage(const std::string &url)
     {
@@ -207,7 +230,6 @@ namespace tiktok
 
         if (curl)
         {
-            // std::string url = _sipeto.getFromConfigMap("metaEndpoint") + videoId;
             struct curl_slist *headers = NULL;
 
             headers = curl_slist_append(headers, ("Authorization: Bearer " + bearerToken).c_str());

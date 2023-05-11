@@ -17,6 +17,8 @@ namespace tiktok
 
         void getMediaAttributes(const std::string &url) override;
 
+        std::string extractTiktokUrl(const std::string &html);
+
         std::string downloadHttpsPage(const std::string &url);
 
         std::string getVideoMetadata(const std::string &itemId,
