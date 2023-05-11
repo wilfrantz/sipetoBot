@@ -123,16 +123,37 @@ namespace sipeto
     /// @return none.
     void Sipeto::displayInfo()
     {
-        _logger->info("Welcome to {} {}.",
-                      getFromConfigMap("project"),
-                      getFromConfigMap("version"));
-
+        _logger->info("Welcome to {} {}.", getFromConfigMap("project"), getFromConfigMap("version"));
         _logger->info("{}", getFromConfigMap("description"));
         _logger->info("Developed by: {}.", getFromConfigMap("author"));
-        _logger->info("Using Boost Version: {}.", BOOST_LIB_VERSION);
-        _logger->info("Using jsoncpp Version: {}.", JSONCPP_VERSION_STRING);
-        _logger->info("Using LibCurl Version: {}.", LIBCURL_VERSION);
-        _logger->info("Using spdlog Version: {}.{}.{}", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+
+// Get the Boost version, if available
+#ifdef BOOST_LIB_VERSION
+        _logger->debug("Using Boost Version: {}.", BOOST_LIB_VERSION);
+#else
+        _logger->warn("Could not determine Boost version.");
+#endif
+
+// Get the jsoncpp version, if available
+#ifdef JSONCPP_VERSION_STRING
+        _logger->debug("Using jsoncpp Version: {}.", JSONCPP_VERSION_STRING);
+#else
+        _logger->warn("Could not determine jsoncpp version.");
+#endif
+
+// Get the LibCurl version, if available
+#ifdef LIBCURL_VERSION
+        _logger->debug("Using LibCurl Version: {}.", LIBCURL_VERSION);
+#else
+        _logger->warn("Could not determine LibCurl version.");
+#endif
+
+// Get the spdlog version, if available
+#ifdef SPDLOG_VER_MAJOR
+        _logger->debug("Using spdlog Version: {}.{}.{}", SPDLOG_VER_MAJOR, SPDLOG_VER_MINOR, SPDLOG_VER_PATCH);
+#else
+        _logger->warn("Could not determine spdlog version.");
+#endif
 
         // Display the configuration file in debug mode.
         for (const auto &element : _config)
