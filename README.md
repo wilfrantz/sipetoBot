@@ -4,6 +4,10 @@
 
 The Social Media Downloader Bot is a powerful tool for downloading media from social media links.
 
+## Design
+
+Find more details on the [design document](https://dede.dev/posts/Media-downloader-telegramBot-design-document/){:target="_blank"}.
+
 ## Prerequisites
 
 To build this program, you must have the following dependencies installed:
