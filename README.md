@@ -74,6 +74,12 @@ cmake --build .
 
 Once you have built the sipeto program, you can use it to download media from social media platforms. To do this, run the program and provide a valid URL to a social media post. You can also specify the media type you want to download, such as video or image.
 
+> Note: this project is still under construction.
+{: .prompt-info }
+
+
+For me information, please refer to the [documentation](https://dede.dev/posts/Media-downloader-telegramBot-design-document/){:target="_blank"}
+
 ## Contribution
 
 If you would like to contribute to this project, please submit a pull request.
