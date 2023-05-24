@@ -145,7 +145,6 @@ namespace tiktok
             return;
         }
 
-        // sort media by type. 
         if (root.isMember("itemInfo") && root["itemInfo"].isMember("itemStruct"))
         {
             const Json::Value &itemStruct = root["itemInfo"]["itemStruct"];
@@ -180,7 +179,6 @@ namespace tiktok
                     }
                 }
             }
-
         }
         // Log the message that the function finished getting media attributes
         _logger->debug("Finished getting media attributes for TikTok URL: {}", url);
@@ -206,6 +204,7 @@ namespace tiktok
 
         return url;
     }
+
     // Function to download the content of a web page using Boost.Asio and SSL
     std::string TikTok::downloadHttpsPage(const std::string &url)
     {
@@ -233,7 +232,7 @@ namespace tiktok
             struct curl_slist *headers = NULL;
 
             headers = curl_slist_append(headers, ("Authorization: Bearer " + bearerToken).c_str());
-            headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/87.0");
+            headers = curl_slist_append(headers, "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:87.0) Gecko/20100101 Firefox/103.0");
 
             curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
             curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
