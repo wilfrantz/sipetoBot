@@ -1,4 +1,7 @@
 #include "include/sipeto.h"
+#include "include/tiktok.h"
+#include "include/twitter.h"
+#include "include/instagram.h"
 
 namespace sipeto
 {
@@ -52,7 +55,7 @@ namespace sipeto
                     throw std::runtime_error("Invalid format for object in configuration file.");
                 }
 
-                for (auto const &key : object.getMemberNames())
+                for (const auto &key : object.getMemberNames())
                 {
                     const auto &value = object[key];
                     if (value.isArray())
@@ -97,16 +100,95 @@ namespace sipeto
         }
     }
 
+    /// @brief Hash a string using the FNV-1a algorithm
+    /// @param str[in] The string to hash
+    /// @return The hash value of the string
+    constexpr std::size_t hashString(const char *str)
+    {
+        std::size_t hash = 14695981039346656037ULL;
+        std::size_t prime = 1099511628211ULL;
+
+        for (std::size_t i = 0; str[i] != '\0'; ++i)
+        {
+            hash ^= static_cast<std::size_t>(str[i]);
+            hash *= prime;
+        }
+
+        return hash;
+    }
+
+    /// @brief Process the target keys in the config file
+    /// @param configValue[in] The value of the target key
+    /// @param key[in] The name of the target key
+    /// @return none.
+    void Sipeto::ProcessTargetKeys(const Json::Value &configValue, const std::string &key)
+    {
+        if (configValue.isArray())
+        {
+            for (const auto &element : configValue)
+            {
+                for (const auto &subKey : element.getMemberNames())
+                {
+                    const auto &subValue = element[subKey];
+
+                    if (subValue.isString())
+                    {
+                        tiktok::TikTok tikTok;
+
+                        // Add data to the corresponding config map based on the key
+                        switch (hashString(key.c_str()))
+                        {
+                        case hashString("Twitter"):
+                        {
+                            // TODO: loadConfigMap(subKey, subValue.asString(), twitter.mapGetter());
+                            break;
+                        }
+                        case hashString("TikTok"):
+                        {
+                            loadConfigMap(subKey, subValue.asString(), tikTok.mapGetter());
+                            break;
+                        }
+                        case hashString("Instagram"):
+                        {
+                            // TODO: loadConfigMap(subKey, subValue.asString(), instagram.mapGetter());
+                            break;
+                        }
+                        // Add more cases for other target keys as needed
+                        default:
+                        {
+                            // Invalid key
+                            throw std::runtime_error("Invalid key name in the configuration file.");
+                        }
+                        }
+                    }
+                    else
+                    {
+                        // Invalid value type
+                        spdlog::error("Invalid format for object: {} in the configuration file.", subValue.asString());
+                        throw std::runtime_error("Invalid format for object in the configuration file.");
+                    }
+                }
+            }
+        }
+        // Add more conditions for other target keys as needed
+        else
+        {
+            // Invalid value type
+            throw std::runtime_error("Invalid format for object value in the configuration file.");
+        }
+    }
+
     /// @brief Read from the config file
     /// @param key[in] The key to read from the config file.
     /// @return The value of the key or an error string.
-    const std::string &Sipeto::getFromConfigMap(const std::string &key)
+    const std::string &Sipeto::getFromConfigMap(const std::string &key,
+                                                const std::map<std::string, std::string> &configMap)
     {
         static std::string errorString;
 
         try
         {
-            return _config.at(key);
+            return configMap.at(key);
         }
         catch (const std::out_of_range &)
         {
@@ -161,7 +243,7 @@ namespace sipeto
 #ifdef OPENSSL_VERSION_TEXT
         _logger->debug("Using OpenSSL Version: {}.", OPENSSL_VERSION_TEXT);
 #else
-        _logger->warn("Could not determine OpenSSL version.");  
+        _logger->warn("Could not determine OpenSSL version.");
 #endif
 
         // Display the configuration file in debug mode.
@@ -300,105 +382,6 @@ namespace sipeto
         std::string responseText = "You said: " + messageText;
         sendMessage(chatId, responseText);
     }
-    // void Sipeto::handleWebhookRequest(const HttpRequest &request, HttpResponse &response)
-    // {
-    //     // Parse the request body as JSON and process each update
-    //     Json::Value root;
-    //     Json::Reader reader;
-    //     reader.parse(request.getBody(), root);
-    //     if (root.isObject() && root.isMember("update_id"))
-    //     {
-    //         Update update;
-    //         update.update_id = root["update_id"].asInt();
-    //         update.message.message_id = root["message"]["message_id"].asInt();
-    //         update.message.date = root["message"]["date"].asInt();
-    //         update.message.text = root["message"]["text"].asString();
-    //         update.message.from.id = root["message"]["from"]["id"].asInt();
-    //         update.message.from.first_name = root["message"]["from"]["first_name"].asString();
-    //         update.message.from.last_name = root["message"]["from"]["last_name"].asString();
-    //         update.message.from.username = root["message"]["from"]["username"].asString();
-    //         update.message.chat.id = root["message"]["chat"]["id"].asInt();
-    //         update.message.chat.type = root["message"]["chat"]["type"].asString();
-    //         update.message.chat.title = root["message"]["chat"]["title"].asString();
-    //         update.message.chat.username = root["message"]["chat"]["username"].asString();
-    //         update.message.chat.first_name = root["message"]["chat"]["first_name"].asString();
-    //         update.message.chat.last_name = root["message"]["chat"]["last_name"].asString();
-    //         processUpdate(update);
-    //     }
-
-    //     // Return a 200 OK response to acknowledge receipt of the request
-    //     response.setStatus(200);
-    // }
-
-    /// @brief: Define a function to start the server
-    /// Handle a request and produce a reply.
-    ///@param address[in] address of the request
-    ///@param port[in] port of the request
-    // void Sipeto::startServer()
-    // {
-    //     const std::string &port = getFromConfigMap("sipeto_port");
-    //     const std::string &address = getFromConfigMap("address");
-
-    //     unsigned int numThreads = std::thread::hardware_concurrency();
-
-    //     try
-    //     {
-    //         // Create an io_context object with multiple worker threads
-    //         boost::asio::io_context ioc{static_cast<int>(numThreads)};
-
-    //         // Resolve the endpoint and set reuse_address option
-    //         boost::asio::ip::tcp::resolver resolver(ioc);
-    //         boost::asio::ip::tcp::endpoint endpoint = *resolver.resolve(address, port).begin();
-
-    //         // Create a TCP acceptor object and bind it to the endpoint
-    //         tcp::acceptor acceptor{ioc, endpoint};
-
-    //         // Enable reuse_address option
-    //         acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-
-    //         // Start accepting incoming connections
-    //         spdlog::info("Sipeto started [{}:{}]", address, port);
-    //         isServerRunning = true;
-
-    //         std::vector<std::thread> threadPool;
-    //         threadPool.reserve(numThreads);
-
-    //         // Create a function to accept new connections
-    //         auto acceptConnections = [&acceptor, this](boost::asio::io_context &ioc)
-    //         {
-    //             while (isServerRunning)
-    //             {
-    //                 tcp::socket socket{ioc};
-    //                 acceptor.accept(socket);
-
-    //                 // Process the incoming request in a separate thread
-    //                 std::thread t([this, sock = std::move(socket)]() mutable
-    //                               {
-    //                               http::request<http::string_body> req;
-    //                               http::read(sock, buffer, req);
-    //                               handleRequest(std::move(req), sock); });
-    //                 t.detach();
-    //             }
-    //         };
-
-    //         // Run the acceptConnections function on each thread in the thread pool
-    //         for (size_t i = 0; i < numThreads; ++i)
-    //         {
-    //             threadPool.emplace_back(acceptConnections, std::ref(ioc));
-    //         }
-
-    //         // Wait for all threads in the thread pool to finish
-    //         for (auto &thread : threadPool)
-    //         {
-    //             thread.join();
-    //         }
-    //     }
-    //     catch (const std::exception &e)
-    //     {
-    //         spdlog::info("Error starting sipeto server: {}", e.what());
-    //         exit(1);
-    //     }
-    // }
 
     /// @brief: Define a function to handle the request
     /// @param req[in] request
