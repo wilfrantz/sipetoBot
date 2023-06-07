@@ -27,17 +27,22 @@ namespace sipeto
     public:
         explicit Sipeto(const std::string &configFile = "sipeto_config.json");
 
+        static std::map<std::string, std::string> _configMap;
+
         void loadConfig();
         void displayInfo();
         void setLogLevel(const std::string &level);
         void processTelegramUpdate(const Json::Value &update);
         void sendMessage(std::string chat_id, std::string text);
         std::string processRequest(const std::string &requestBody);
-        const std::string &getFromConfigMap(const std::string &key);
         std::shared_ptr<spdlog::logger> getLogger() { return _logger; }
-        void ProcessTargetKeys(const Json::Value &configValue, const std::string &key);
+
+        // std::map<std::string, std::string> &mapGetter() { return _configMap; }
+
+        // void processTargetKeys(const Json::Value &configValue, const std::string &key);
 
         const std::vector<std::string> _targetKeys = {"twitter", "tiktok", "instagram", "facebook"};
+        const std::string &getFromConfigMap(const std::string &key, const std::map<std::string, std::string> &configMap = _configMap);
 
         inline void loadConfigMap(const std::string &key, const std::string &value,
                                   std::map<std::string, std::string> &_configMap)
@@ -84,17 +89,16 @@ namespace sipeto
         std::vector<Update> parseUpdatesJson(Json::Value root);
         std::string makeRequest(std::string &url, std::string data = "");
         void handleRequest(http::request<http::string_body> &&req, tcp::socket &socket);
-        const std::string &Sipeto::getFromConfigMap(const std::string &key,
-                                                    const std::map<std::string, std::string> &configMap);
+        void processTargetKeys(const Json::Value &configValue, const std::string &key);
         // void Sipeto::handleWebhookRequest(const HttpRequest &request, HttpResponse &response);
         // Hash function for use with switch statement in setLogLevel()
+
         static constexpr std::size_t hash(const char *s, std::size_t h = 0)
         {
             return (*s == '\0') ? h : hash(s + 1, (h * 31) + static_cast<unsigned char>(*s));
         }
 
         std::string _configFile;
-
         static std::shared_ptr<spdlog::logger> _logger;
 
         std::string receivedUpdate;

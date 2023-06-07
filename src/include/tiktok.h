@@ -13,8 +13,7 @@ namespace tiktok
     class TikTok final : mediaDownloader::MediaDownloader
     {
     public:
-
-        TikTok();
+        TikTok() {}
 
         TikTok(const std::string &mediaUrl, Sipeto &sipeto);
 
@@ -39,7 +38,6 @@ namespace tiktok
         std::map<std::string, std::string> &mapGetter() { return _configMap; }
 
         ReturnCode downloadMedia() override;
-
 
         ~TikTok();
 

@@ -14,22 +14,14 @@ using namespace simpleHttpServer;
 int main(int argc, char **argv)
 {
     Sipeto sipeto;
+    sipeto.displayInfo();
+    exit(0);
+    // TikTok tikTok;
     /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
 
-    // sipeto.displayInfo();
-    TikTok tiktok(sipeto.getFromConfigMap("tiktokUrl"), sipeto);
-    tiktok.downloadMedia();
-    // tiktok.getMediaAttributes(sipeto.getFromConfigMap("tiktokMediaUrl"));
-    exit(0);
-
-    // Twitter twitter(sipeto.getFromConfigMap("api_url"), sipeto);
-    // Instagram instagram(sipeto.getFromConfigMap("api_url"), sipeto);
-    // instagram.getMediaAttributes(sipeto.getFromConfigMap("instagramMedia2"));
-
-    // twitter.downloadMedia();
-    // twitter.getMediaAttributes(sipeto.getFromConfigMap("media_url"));
-    // exit(0);
+    // TikTok tiktok(sipeto.getFromConfigMap("tiktokUrl", tikTok.mapGetter()), sipeto);
+    // tiktok.downloadMedia();
 
     boost::asio::io_context ioc{1};
     auto address = ip::make_address(sipeto.getFromConfigMap("address"));
@@ -37,6 +29,7 @@ int main(int argc, char **argv)
     tcp::endpoint endpoint{address, port};
 
     SimpleHttpServer server(ioc, endpoint, sipeto);
+
     // Start the http server
     server.start();
 

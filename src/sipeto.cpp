@@ -5,6 +5,7 @@
 
 namespace sipeto
 {
+    std::map<std::string, std::string> Sipeto::_configMap;
     std::shared_ptr<spdlog::logger> Sipeto::_logger = spdlog::stdout_color_mt("Sipeto");
 
     Sipeto::Sipeto(const std::string &configFIle) : _configFile(configFIle)
@@ -58,32 +59,20 @@ namespace sipeto
                 for (const auto &key : object.getMemberNames())
                 {
                     const auto &value = object[key];
-                    if (value.isArray())
+                    // Check if the key matches any target key in the vector
+                    if (std::find(_targetKeys.begin(), _targetKeys.end(), key) != _targetKeys.end())
                     {
-                        // Process data array values
-                        for (const auto &element : value)
-                        {
-                            for (auto const &key : element.getMemberNames())
-                            {
-                                const auto &value = element[key];
-                                if (value.isString())
-                                {
-                                    // Add data array to _config map
-                                    _config[key] = value.asString();
-                                }
-                                else
-                                {
-                                    // Invalid value type
-                                    spdlog::error("Invalid format for object: {} in configuration file.", value.asString());
-                                    throw std::runtime_error("Invalid format for object in configuration file.");
-                                }
-                            }
-                        }
+                        processTargetKeys(value, key);
                     }
                     else if (value.isString())
                     {
-                        // Process string values: add data to _config map.
-                        _config[key] = value.asString();
+                        // add data to main (sipeto) _config map.
+                        this->_configMap.emplace(key, value.asString());
+                    }
+                    else if (value.isInt())
+                    {
+                        // convert to string, add to main (sipeto)_config map.
+                        this->_configMap.emplace(key, std::to_string(value.asInt()));
                     }
                     else
                     {
@@ -121,7 +110,7 @@ namespace sipeto
     /// @param configValue[in] The value of the target key
     /// @param key[in] The name of the target key
     /// @return none.
-    void Sipeto::ProcessTargetKeys(const Json::Value &configValue, const std::string &key)
+    void Sipeto::processTargetKeys(const Json::Value &configValue, const std::string &key)
     {
         if (configValue.isArray())
         {
@@ -206,10 +195,10 @@ namespace sipeto
     void Sipeto::displayInfo()
     {
         _logger->info("Welcome to {} {}.",
-                      getFromConfigMap("project"),
-                      getFromConfigMap("version"));
-        _logger->info("{}", getFromConfigMap("description"));
-        _logger->info("Developed by: {}.", getFromConfigMap("author"));
+                      getFromConfigMap("project", this->_configMap),
+                      getFromConfigMap("project", this->_configMap));
+        _logger->info("{}", getFromConfigMap("description", this->_configMap));
+        _logger->info("Developed by: {}.", getFromConfigMap("author", this->_configMap));
 
 // Get the Boost version, if available
 #ifdef BOOST_LIB_VERSION
@@ -247,7 +236,7 @@ namespace sipeto
 #endif
 
         // Display the configuration file in debug mode.
-        for (const auto &element : _config)
+        for (const auto &element : this->_configMap)
         {
             _logger->debug("Config: {} = {}", element.first, element.second);
         }

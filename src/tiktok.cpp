@@ -23,12 +23,12 @@ namespace tiktok
         _logger->debug("Downloading media from TikTok URL: {}", _attributes["downloadAddr"]);
         exit(0);
 
-        std::string filePath(_sipeto.getFromConfigMap("tiktokOutputPath") + _attributes["id"] + ".mp4");
+        std::string filePath(_sipeto.getFromConfigMap("tiktokOutputPath", this->mapGetter()) + _attributes["id"] + ".mp4");
         std::ofstream outputFile(filePath, std::ios::binary);
 
         if (!outputFile)
         {
-            _logger->error("Error opening output file: {}", _sipeto.getFromConfigMap("tiktokOutputPath"));
+            _logger->error("Error opening output file: {}", _sipeto.getFromConfigMap("tiktokOutputPath", this->mapGetter()));
             return MediaDownloader::ReturnCode::MediaDownloadError;
         }
 
@@ -108,10 +108,10 @@ namespace tiktok
 
         // contruct the url for the API request.
         // const std::string response = TikTok::getVideoMetadata(videoId, _sipeto.getFromConfigMap("client_key"));
-        const std::string endpoint = _sipeto.getFromConfigMap("metaEndpoint") + videoId;
+        const std::string endpoint = _sipeto.getFromConfigMap("metaEndpoint", this->mapGetter()) + videoId;
 
         const std::string response = TikTok::performHttpGetRequest(endpoint,
-                                                                   _sipeto.getFromConfigMap("client_key"));
+                                                                   _sipeto.getFromConfigMap("client_key", this->mapGetter()));
 
         if (response.empty())
         {
