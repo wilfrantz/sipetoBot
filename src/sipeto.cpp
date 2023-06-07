@@ -292,13 +292,13 @@ namespace sipeto
         SPDLOG_DEBUG("Received update: {}", Json::FastWriter().write(update));
 
         // Extract the relevant fields from the update message
-        std::string chat_id = std::to_string(update.message.chat.id);
-        std::string user_id = std::to_string(update.message.from.id);
-        std::string message_text = update.message.text;
+        std::string chatId = std::to_string(update.message.chat.id);
+        std::string userId = std::to_string(update.message.from.id);
+        std::string messageText = update.message.text;
 
         // Process the update by sending a response message
-        std::string response_text = "You said: " + message_text;
-        sendMessage(chat_id, response_text);
+        std::string responseText = "You said: " + messageText;
+        sendMessage(chatId, responseText);
     }
     // void Sipeto::handleWebhookRequest(const HttpRequest &request, HttpResponse &response)
     // {
