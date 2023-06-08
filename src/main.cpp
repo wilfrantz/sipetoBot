@@ -14,8 +14,12 @@ using namespace simpleHttpServer;
 int main(int argc, char **argv)
 {
     Sipeto sipeto;
+    // load configuration map.
+    sipeto.loadConfig();
     sipeto.displayInfo();
     exit(0);
+
+
     /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
 

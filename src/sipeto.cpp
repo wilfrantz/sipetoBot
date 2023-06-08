@@ -10,9 +10,6 @@ namespace sipeto
 
     Sipeto::Sipeto(const std::string &configFIle) : _configFile(configFIle)
     {
-        // load configuration map.
-        loadConfig();
-
         _logger = spdlog::get("Sipeto");
         if (!_logger)
         {
@@ -59,25 +56,57 @@ namespace sipeto
                 for (const auto &key : object.getMemberNames())
                 {
                     const auto &value = object[key];
+                    _logger->info("Value: {}", value.asString());
+                    exit(0);
+
                     // Check if the key matches any target key in the vector
-                    if (std::find(_targetKeys.begin(), _targetKeys.end(), key) != _targetKeys.end())
+                    if (std::find(_targetKeys.begin(), _targetKeys.end(), value) != _targetKeys.end())
                     {
                         processTargetKeys(value, key);
                     }
-                    else if (value.isString())
-                    {
-                        // add data to main (sipeto) _config map.
-                        this->_configMap.emplace(key, value.asString());
-                    }
-                    else if (value.isInt())
-                    {
-                        // convert to string, add to main (sipeto)_config map.
-                        this->_configMap.emplace(key, std::to_string(value.asInt()));
-                    }
                     else
                     {
-                        // Invalid value type
-                        throw std::runtime_error("Invalid format for object value in configuration file.");
+                        if (value.isArray())
+                        {
+                            for (const auto &subKey : value.getMemberNames())
+                            {
+                                const auto &subValue = value[subKey];
+
+                                if (subValue.isString())
+                                {
+                                    // add data to main (sipeto) _config map.
+                                    this->_configMap.emplace(subKey, subValue.asString());
+                                }
+                                else if (subValue.isInt())
+                                {
+                                    // convert to string, add to main (sipeto)_config map.
+                                    this->_configMap.emplace(subKey, std::to_string(subValue.asInt()));
+                                }
+                                else
+                                {
+                                    // Invalid value type
+                                    throw std::runtime_error("Invalid format for object value in configuration file.");
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (value.isString())
+                            {
+                                // add data to main (sipeto) _config map.
+                                this->_configMap.emplace(key, value.asString());
+                            }
+                            else if (value.isInt())
+                            {
+                                // convert to string, add to main (sipeto)_config map.
+                                this->_configMap.emplace(key, std::to_string(value.asInt()));
+                            }
+                            else
+                            {
+                                // Invalid value type
+                                throw std::runtime_error("Invalid format for object value in configuration file.");
+                            }
+                        }
                     }
                 }
             }
