@@ -25,6 +25,7 @@ namespace sipeto
     class Sipeto
     {
     public:
+
         explicit Sipeto(const std::string &configFile = "sipeto_config.json");
 
         static std::map<std::string, std::string> _configMap;

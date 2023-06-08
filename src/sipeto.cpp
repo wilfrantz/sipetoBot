@@ -122,7 +122,7 @@ namespace sipeto
 
                     if (subValue.isString())
                     {
-                        tiktok::TikTok tikTok;
+                        // tiktok::TikTok tikTok;
 
                         // Add data to the corresponding config map based on the key
                         switch (hashString(key.c_str()))
@@ -134,7 +134,7 @@ namespace sipeto
                         }
                         case hashString("TikTok"):
                         {
-                            loadConfigMap(subKey, subValue.asString(), tikTok.mapGetter());
+                            // TODO: loadConfigMap(subKey, subValue.asString(), tikTok.mapGetter());
                             break;
                         }
                         case hashString("Instagram"):

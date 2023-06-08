@@ -13,7 +13,7 @@ namespace tiktok
     class TikTok final : mediaDownloader::MediaDownloader
     {
     public:
-        TikTok() {}
+
 
         TikTok(const std::string &mediaUrl, Sipeto &sipeto);
 
