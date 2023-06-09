@@ -91,20 +91,37 @@ namespace sipeto
                         }
                         else
                         {
-                            if (value.isString())
+                            if (!value.isArray())
                             {
-                                // add data to main (sipeto) _config map.
-                                this->_configMap.emplace(key, value.asString());
+                                throw std::runtime_error("Config file is not an array.");
                             }
-                            else if (value.isInt())
+
+                            for (const auto &object : value)
                             {
-                                // convert to string, add to main (sipeto)_config map.
-                                this->_configMap.emplace(key, std::to_string(value.asInt()));
-                            }
-                            else
-                            {
-                                // Invalid value type
-                                throw std::runtime_error("Invalid format for object value in configuration file.");
+                                if (!object.isObject())
+                                {
+                                    throw std::runtime_error("Invalid format for object in configuration file.");
+                                }
+
+                                for (const auto key : object.getMemberNames())
+                                {
+                                    const auto &value = object[key];
+                                    if (value.isString())
+                                    {
+                                        // add data to main (sipeto) _config map.
+                                        this->_configMap.emplace(key, value.asString());
+                                    }
+                                    else if (value.isInt())
+                                    {
+                                        // convert to string, add to main (sipeto)_config map.
+                                        this->_configMap.emplace(key, std::to_string(value.asInt()));
+                                    }
+                                    else
+                                    {
+                                        // Invalid value type
+                                        throw std::runtime_error("Invalid format for object value in configuration file.");
+                                    }
+                                }
                             }
                         }
                     }
