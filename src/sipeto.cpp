@@ -30,7 +30,7 @@ namespace sipeto
 
         try
         {
-            _logger->debug("Loading configuration file: {}.", _configFile);
+            _logger->info("Loading configuration file: {}.", _configFile);
 
             std::ifstream file(_configFile);
 
@@ -58,6 +58,7 @@ namespace sipeto
     /// @return none.
     void Sipeto::validateConfigRoot(const Json::Value &root)
     {
+        _logger->info("Validating configuration file.");
         if (!root.isArray())
         {
             throw std::runtime_error("Config file is not an array.");
@@ -69,16 +70,18 @@ namespace sipeto
     /// @return none.
     void Sipeto::parseConfig(const Json::Value &root)
     {
+        _logger->info("Parsing configuration file.");
+
         for (const auto &object : root)
         {
             if (!object.isObject())
             {
                 throw std::runtime_error("Invalid format for object in configuration file.");
             }
-
             for (const auto &key : object.getMemberNames())
             {
                 const auto &value = object[key];
+                _logger->debug("Key: {}", key);
 
                 if (isTargetKey(key))
                 {
@@ -131,9 +134,9 @@ namespace sipeto
     /// @brief  Check if the value is a target key.
     /// @param  value Json object.
     /// @return true if the value is a target key, false otherwise.
-    bool Sipeto::isTargetKey(const std::string &value) const
+    bool Sipeto::isTargetKey(const std::string &key) const
     {
-        return std::find(_targetKeys.begin(), _targetKeys.end(), value) != _targetKeys.end();
+        return std::find(_targetKeys.begin(), _targetKeys.end(), key) != _targetKeys.end();
     }
 
     /// @brief Process the config value.
@@ -189,32 +192,18 @@ namespace sipeto
 
                     if (subValue.isString())
                     {
-                        // tiktok::TikTok tikTok;
 
-                        // Add data to the corresponding config map based on the key
-                        switch (hashString(key.c_str()))
+                        // TODO: Add data to the corresponding config map based on the key
+
+                        // Check if the key exists in the map
+                        if (_keyMap.count(key) > 0)
                         {
-                        case hashString("Twitter"):
-                        {
-                            // TODO: loadConfigMap(subKey, subValue.asString(), twitter.mapGetter());
-                            break;
+                            const std::string &logKey = _keyMap[key];
+                            _logger->info("{}: {} = {}", logKey, subKey, subValue.asString());
                         }
-                        case hashString("TikTok"):
+                        else
                         {
-                            // TODO: loadConfigMap(subKey, subValue.asString(), tikTok.mapGetter());
-                            break;
-                        }
-                        case hashString("Instagram"):
-                        {
-                            // TODO: loadConfigMap(subKey, subValue.asString(), instagram.mapGetter());
-                            break;
-                        }
-                        // Add more cases for other target keys as needed
-                        default:
-                        {
-                            // Not a target key
-                            continue;
-                        }
+                            _logger->info("Unknown key: {} = {}", subKey, subValue.asString());
                         }
                     }
                     else

@@ -1,8 +1,8 @@
-/** 
+/**
  * The Sipeto class is designed to facilitate communication between a
  * Telegram bot and the Telegram API. The class provides functions
  * to send messages and receive updates from the API using HTTPS requests.
-**/
+ **/
 
 #ifndef SIPETO_H
 #define SIPETO_H
@@ -24,7 +24,6 @@ namespace sipeto
     class Sipeto
     {
     public:
-
         explicit Sipeto(const std::string &configFile = "sipeto_config.json");
 
         static std::map<std::string, std::string> _configMap;
@@ -37,19 +36,24 @@ namespace sipeto
         std::string processRequest(const std::string &requestBody);
         std::shared_ptr<spdlog::logger> getLogger() { return _logger; }
 
+        /// Methods to parse the configuration file.
         void parseConfig(const Json::Value &root);
+        bool isTargetKey(const std::string &key) const;
         void validateConfigRoot(const Json::Value &root);
-        bool isTargetKey(const std::string &value) const;
         void parseArrayConfig(const Json::Value &arrayValue);
         void parseObjectConfig(const Json::Value &objectValue);
         void processConfigValue(const std::string &key, const Json::Value &value);
 
-        // std::map<std::string, std::string> &mapGetter() { return _configMap; }
-
-        // void processTargetKeys(const Json::Value &configValue, const std::string &key);
-
+        /// NOTE: to load array related to each social media from config file.
         const std::vector<std::string> _targetKeys = {"twitter", "tiktok", "instagram", "facebook"};
         const std::string &getFromConfigMap(const std::string &key, const std::map<std::string, std::string> &configMap = _configMap);
+
+        /// NOTE: to map the key in the config file to the key in the config map.
+        std::unordered_map<std::string, std::string> _keyMap = {
+            {"tiktok", "TikTok"},
+            {"twitter", "Twitter"},
+            {"instagram", "Instagram"},
+            {"facebook", "Facebook"}};
 
         inline void loadConfigMap(const std::string &key, const std::string &value,
                                   std::map<std::string, std::string> &_configMap)
