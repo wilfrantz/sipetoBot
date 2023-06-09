@@ -1,4 +1,4 @@
-#include "include/sipeto.h"
+// #include "include/sipeto.h"
 #include "include/tiktok.h"
 #include "include/twitter.h"
 #include "include/instagram.h"
@@ -25,7 +25,7 @@ namespace sipeto
         if (_configFile.empty())
         {
             _logger->error("Configuration file is empty.");
-            exit(1);
+            throw std::runtime_error("Configuration file is empty.");
         }
 
         try
@@ -36,102 +36,123 @@ namespace sipeto
 
             if (!file.is_open())
             {
-                throw std::runtime_error("Could not open config file.");
+                throw std::runtime_error("Could not open config file: " + _configFile);
             }
 
             Json::Value root;
             file >> root;
-            if (!root.isArray())
-            {
-                throw std::runtime_error("Config file is not an array.");
-            }
 
-            for (const auto &object : root)
-            {
-                if (!object.isObject())
-                {
-                    throw std::runtime_error("Invalid format for object in configuration file.");
-                }
+            validateConfigRoot(root);
 
-                for (const auto &key : object.getMemberNames())
-                {
-                    const auto &value = object[key];
-                    _logger->info("Value: {}", value.asString());
-                    exit(0);
-
-                    // Check if the key matches any target key in the vector
-                    if (std::find(_targetKeys.begin(), _targetKeys.end(), value) != _targetKeys.end())
-                    {
-                        processTargetKeys(value, key);
-                    }
-                    else
-                    {
-                        if (value.isArray())
-                        {
-                            for (const auto &subKey : value.getMemberNames())
-                            {
-                                const auto &subValue = value[subKey];
-
-                                if (subValue.isString())
-                                {
-                                    // add data to main (sipeto) _config map.
-                                    this->_configMap.emplace(subKey, subValue.asString());
-                                }
-                                else if (subValue.isInt())
-                                {
-                                    // convert to string, add to main (sipeto)_config map.
-                                    this->_configMap.emplace(subKey, std::to_string(subValue.asInt()));
-                                }
-                                else
-                                {
-                                    // Invalid value type
-                                    throw std::runtime_error("Invalid format for object value in configuration file.");
-                                }
-                            }
-                        }
-                        else
-                        {
-                            if (!value.isArray())
-                            {
-                                throw std::runtime_error("Config file is not an array.");
-                            }
-
-                            for (const auto &object : value)
-                            {
-                                if (!object.isObject())
-                                {
-                                    throw std::runtime_error("Invalid format for object in configuration file.");
-                                }
-
-                                for (const auto key : object.getMemberNames())
-                                {
-                                    const auto &value = object[key];
-                                    if (value.isString())
-                                    {
-                                        // add data to main (sipeto) _config map.
-                                        this->_configMap.emplace(key, value.asString());
-                                    }
-                                    else if (value.isInt())
-                                    {
-                                        // convert to string, add to main (sipeto)_config map.
-                                        this->_configMap.emplace(key, std::to_string(value.asInt()));
-                                    }
-                                    else
-                                    {
-                                        // Invalid value type
-                                        throw std::runtime_error("Invalid format for object value in configuration file.");
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            parseConfig(root);
         }
         catch (const std::exception &e)
         {
             _logger->error("Error reading configuration file: {}", e.what());
-            // return an error code or throw an exception
+            throw;
+        }
+    }
+
+    /// @brief Validate the config file.
+    /// @param root Json object.
+    /// @return none.
+    void Sipeto::validateConfigRoot(const Json::Value &root)
+    {
+        if (!root.isArray())
+        {
+            throw std::runtime_error("Config file is not an array.");
+        }
+    }
+
+    /// @brief Parse the config file.
+    /// @param root Json object.
+    /// @return none.
+    void Sipeto::parseConfig(const Json::Value &root)
+    {
+        for (const auto &object : root)
+        {
+            if (!object.isObject())
+            {
+                throw std::runtime_error("Invalid format for object in configuration file.");
+            }
+
+            for (const auto &key : object.getMemberNames())
+            {
+                const auto &value = object[key];
+
+                if (isTargetKey(key))
+                {
+                    processTargetKeys(value, key);
+                }
+                else if (value.isArray())
+                {
+                    parseArrayConfig(value);
+                }
+                else if (value.isObject())
+                {
+                    parseObjectConfig(value);
+                }
+                else
+                {
+                    throw std::runtime_error("Invalid format for object value in configuration file.");
+                }
+            }
+        }
+    }
+
+    /// @brief Parse the array config.
+    /// @param arrayValue Json object.
+    /// @return none.
+    void Sipeto::parseArrayConfig(const Json::Value &arrayValue)
+    {
+        for (const auto &object : arrayValue)
+        {
+            if (!object.isObject())
+            {
+                throw std::runtime_error("Invalid format for object in configuration file.");
+            }
+
+            parseObjectConfig(object);
+        }
+    }
+
+    /// @brief  Parse the object config.
+    /// @param objectValue Json object.
+    /// @return none.
+    void Sipeto::parseObjectConfig(const Json::Value &objectValue)
+    {
+        for (const auto &key : objectValue.getMemberNames())
+        {
+            const auto &value = objectValue[key];
+            processConfigValue(key, value);
+        }
+    }
+
+    /// @brief  Check if the value is a target key.
+    /// @param  value Json object.
+    /// @return true if the value is a target key, false otherwise.
+    bool Sipeto::isTargetKey(const std::string &value) const
+    {
+        return std::find(_targetKeys.begin(), _targetKeys.end(), value) != _targetKeys.end();
+    }
+
+    /// @brief Process the config value.
+    /// @param key 
+    /// @param value
+    /// @return none. 
+    void Sipeto::processConfigValue(const std::string &key, const Json::Value &value)
+    {
+        if (value.isString())
+        {
+            _configMap.emplace(key, value.asString());
+        }
+        else if (value.isInt())
+        {
+            _configMap.emplace(key, std::to_string(value.asInt()));
+        }
+        else
+        {
+            throw std::runtime_error("Invalid format for object value in configuration file.");
         }
     }
 
@@ -191,8 +212,8 @@ namespace sipeto
                         // Add more cases for other target keys as needed
                         default:
                         {
-                            // Invalid key
-                            throw std::runtime_error("Invalid key name in the configuration file.");
+                            // Not a target key
+                            continue;
                         }
                         }
                     }

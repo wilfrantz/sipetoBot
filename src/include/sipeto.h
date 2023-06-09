@@ -7,7 +7,6 @@
 #ifndef SIPETO_H
 #define SIPETO_H
 
-// #include "header.h"
 #include "simple_http_server.h"
 
 namespace sipeto
@@ -37,6 +36,13 @@ namespace sipeto
         void sendMessage(std::string chat_id, std::string text);
         std::string processRequest(const std::string &requestBody);
         std::shared_ptr<spdlog::logger> getLogger() { return _logger; }
+
+        void parseConfig(const Json::Value &root);
+        void validateConfigRoot(const Json::Value &root);
+        bool isTargetKey(const std::string &value) const;
+        void parseArrayConfig(const Json::Value &arrayValue);
+        void parseObjectConfig(const Json::Value &objectValue);
+        void processConfigValue(const std::string &key, const Json::Value &value);
 
         // std::map<std::string, std::string> &mapGetter() { return _configMap; }
 
