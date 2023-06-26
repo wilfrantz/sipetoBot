@@ -9,7 +9,6 @@ namespace mediaDownloader
     class MediaDownloader
     {
     public:
-        MediaDownloader();
 
         enum class ReturnCode
         {
@@ -22,6 +21,8 @@ namespace mediaDownloader
 
         virtual ReturnCode downloadMedia() = 0;
         virtual void getMediaAttributes(const std::string &url) = 0;
+        virtual void loadConfigMap(const std::string &key, const std::string &value) = 0;
+        const std::string &getFromConfigMap(const std::string &key, const std::map<std::string, std::string> &configMap);
 
         std::string makeHttpRequest(const std::string &url,
                                     const std::string &method = "GET",
@@ -31,15 +32,18 @@ namespace mediaDownloader
         virtual std::string performHttpGetRequest(const std::string &url,
                                                   const std::string &bearerToken);
 
-        static std::shared_ptr<spdlog::logger> _logger;
 
         static size_t writeCallback(char *ptr,
                                     size_t size,
                                     size_t nmemb,
                                     std::string *data);
 
-        virtual ~MediaDownloader() = 0;
 
+        virtual ~MediaDownloader() = default;
+
+    protected:
+        static std::shared_ptr<spdlog::logger> _logger;
+        const std::map<std::string, std::string> &configMap;
     };
 
 } // !namespace mediaDownloader

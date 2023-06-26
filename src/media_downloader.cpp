@@ -1,3 +1,7 @@
+#include <iostream>
+#include <sstream>
+#include <boost/asio.hpp>
+
 #include "include/media_downloader.h"
 
 namespace asio = boost::asio;
@@ -6,22 +10,6 @@ using tcp = boost::asio::ip::tcp;
 namespace mediaDownloader
 {
     std::shared_ptr<spdlog::logger> MediaDownloader::_logger = spdlog::stdout_color_mt("MediaDownloader");
-
-    MediaDownloader::MediaDownloader()
-    {
-
-        _logger = spdlog::get("MediaDownloader");
-        if (!_logger)
-        {
-            _logger = spdlog::stdout_color_mt("MediaDownloader");
-        }
-
-        _logger->debug("MediaDownloader constructor");
-    }
-
-#include <iostream>
-#include <sstream>
-#include <boost/asio.hpp>
 
     namespace asio = boost::asio;
     using tcp = boost::asio::ip::tcp;
@@ -110,6 +98,27 @@ namespace mediaDownloader
         return response;
     }
 
+    /// @brief Read from the config file
+    /// @param key[in] The key to read from the config file.
+    /// @return The value of the key or an error string.
+    const std::string &MediaDownloader::getFromConfigMap(const std::string &key,
+                                                         const std::map<std::string, std::string> &configMap)
+    {
+        static std::string errorString;
+
+        try
+        {
+            return configMap.at(key);
+        }
+        catch (const std::out_of_range &)
+        {
+            _logger->error("Error retrieving key: {} from config file.", key);
+            static const std::string errorString = "Error retrieving " + key + " from config file";
+            return errorString;
+            exit(1);
+        }
+        return errorString;
+    }
     size_t MediaDownloader::writeCallback(char *ptr, size_t size, size_t nmemb, std::string *data)
     {
         data->append(ptr, size * nmemb);

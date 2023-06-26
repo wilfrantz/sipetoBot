@@ -10,12 +10,20 @@ using namespace mediaDownloader;
 namespace tiktok
 {
 
-    class TikTok final : mediaDownloader::MediaDownloader
+    class TikTok final : public mediaDownloader::MediaDownloader
     {
     public:
 
+        TikTok(const std::string &mediaUrl, Sipeto &sipeto)
+            : MEDIA_URL(mediaUrl), _sipeto(sipeto)
+        {
+            _logger->debug("TikTok constructor");
+        }
 
-        TikTok(const std::string &mediaUrl, Sipeto &sipeto);
+        inline void loadConfigMap(const std::string &key, const std::string &value) override
+        {
+            _configMap[key] = value;
+        }
 
         void getMediaAttributes(const std::string &url) override;
 
@@ -46,7 +54,7 @@ namespace tiktok
         std::string mediaType = "Unknown media type";
         std::map<std::string, std::string> _configMap;
         static std::shared_ptr<spdlog::logger> _logger;
-        std::map <std::string, std::string> _attributes;
+        std::map<std::string, std::string> _attributes;
         std::string MEDIA_URL = "<insert_media_file_url_here>";
     };
 }

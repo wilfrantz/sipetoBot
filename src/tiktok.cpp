@@ -8,13 +8,6 @@ namespace tiktok
 {
     std::shared_ptr<spdlog::logger> TikTok::_logger = spdlog::stdout_color_mt("TikTok");
 
-
-    TikTok::TikTok(const std::string &mediaUrl, Sipeto &sipeto)
-        : MediaDownloader(), _sipeto(sipeto), MEDIA_URL(mediaUrl)
-    {
-        _logger->debug("TikTok constructor");
-    }
-
     MediaDownloader::ReturnCode TikTok::downloadMedia()
     {
         CURL *curl;

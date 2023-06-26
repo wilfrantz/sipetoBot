@@ -192,7 +192,6 @@ namespace sipeto
 
                     if (subValue.isString())
                     {
-
                         // TODO: Add data to the corresponding config map based on the key
 
                         // Check if the key exists in the map
@@ -215,7 +214,6 @@ namespace sipeto
                 }
             }
         }
-        // Add more conditions for other target keys as needed
         else
         {
             // Invalid value type
