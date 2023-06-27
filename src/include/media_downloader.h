@@ -22,12 +22,14 @@ namespace mediaDownloader
         };
 
         virtual ReturnCode downloadMedia() = 0;
+        virtual std::map<std::string, std::string> &getTheMap() = 0;
         virtual void getMediaAttributes(const std::string &url) = 0;
-        virtual void loadConfigMap(const std::string &key, const std::string &value,
-                                   const std::string &logKey) = 0;
 
+        virtual void loadConfigMap(const Json::Value &root, const std::string &socialMedia,
+                                   std::map<std::string, std::string> &configMap);
         const std::string &getFromConfigMap(const std::string &key,
                                             const std::map<std::string, std::string> &configMap);
+
 
         static size_t writeCallback(char *ptr,
                                     size_t size,
@@ -52,8 +54,7 @@ namespace mediaDownloader
             }
             for (auto &i : _configMap)
             {
-                _logger->info("{} : {}", i.first, i.second);
-                std::cout << i.first << " : " << i.second << std::endl;
+                _logger->debug("{} : {}", i.first, i.second);
             }
         }
 

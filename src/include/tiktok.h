@@ -21,55 +21,28 @@ namespace tiktok
             _logger->debug("TikTok constructor");
         }
 
-
+        ReturnCode downloadMedia() override;
         void getMediaAttributes(const std::string &url) override;
-
-        std::string extractTiktokUrl(const std::string &html);
-
-        std::string downloadHttpsPage(const std::string &url);
-
-        std::string getVideoMetadata(const std::string &itemId,
-                                     const std::string &bearerToken);
-
         std::string performHttpGetRequest(const std::string &itemId,
                                           const std::string &bearerToken = " ") override;
+        inline std::map<std::string, std::string> &getTheMap() override { return _configMap; }
 
+        std::string extractTiktokUrl(const std::string &html);
+        std::string downloadHttpsPage(const std::string &url);
+        std::string getVideoMetadata(const std::string &itemId,
+                                     const std::string &bearerToken);
         static size_t writeCallback(void *ptr, size_t size,
                                     size_t nmemb, void *userdata);
-
         static size_t writeFileCallback(void *contents, size_t size,
                                         size_t nmemb, void *userp);
-
-        ReturnCode downloadMedia() override;
-
-        std::map<std::string, std::string> &mapGetter() { return _configMap; }
-
-
-        inline void loadConfigMap(const std::string &key, const std::string &value, const std::string &logKey) override
-        {
-            // mapGetter().emplace(key, value);
-            _configMap[key] = value;
-
-        }
-
-        inline void loadConfigMap(const Json::Value &root)
-        {
-            _logger->info("Loading config map for TikTok.");
-            for (auto &key : root.getMemberNames())
-            {
-                // mapGetter().emplace(key, root[key].asString());
-                _configMap[key] = root[key].asString();
-            }
-        }
 
         ~TikTok();
 
     private:
-        // Sipeto &_sipeto;
         std::string mediaType = "Unknown media type";
-        static std::map<std::string, std::string> _configMap;
         static std::shared_ptr<spdlog::logger> _logger;
         std::map<std::string, std::string> _attributes;
+        static std::map<std::string, std::string> _configMap;
         std::string MEDIA_URL = "<insert_media_file_url_here>";
     };
 }

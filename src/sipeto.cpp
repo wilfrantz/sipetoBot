@@ -1,4 +1,3 @@
-// #include "include/sipeto.h"
 #include "include/tiktok.h"
 #include "include/twitter.h"
 #include "include/instagram.h"
@@ -79,7 +78,6 @@ namespace sipeto
             for (const auto &key : object.getMemberNames())
             {
                 const auto &value = object[key];
-                _logger->debug("Key: {}", key);
 
                 if (isTargetKey(key))
                 {
@@ -187,57 +185,21 @@ namespace sipeto
             {
                 if (_keyMap.count(key) > 0)
                 {
-                    const std::string &logKey = _keyMap[key];
-                    if (logKey == "TikTok")
+                    const std::string &socialMedia = _keyMap[key];
+                    if (socialMedia == "TikTok")
                     {
-                        tiktok::TikTok tiktok;
-                        tiktok.loadConfigMap(element);
-                        tiktok.displayMap(tiktok.mapGetter());
+                        tiktok::TikTok tikTok;
+                        tikTok.loadConfigMap(element, socialMedia, tikTok.getTheMap());
                     }
+                    // TODO: Add more social media here.
+                    // else
+                    // {
+                    //     _logger->info("Unknown key: {} = {}", subKey, subValue.asString());
+                    // }
                 }
                 else
                 {
                     _logger->info("Unknown key: {}", element.asString());
-                }
-                exit(1);
-
-                for (const auto &subKey : element.getMemberNames())
-                {
-                    const auto &subValue = element[subKey];
-
-                    // Add data to the corresponding config map based on the key
-                    if (subValue.isString())
-                    {
-                        // Check if the key exists in the map
-                        if (_keyMap.count(key) > 0)
-                        {
-                            const std::string &logKey = _keyMap[key];
-                            _logger->info("{}: {} = {}", logKey, subKey, subValue.asString());
-                            // _logger->info("Loading config map for {}", key);
-
-                            if (logKey == "TikTok")
-                            {
-                                // _logger->info("{}: {} = {}", logKey, subKey, subValue.asString());
-                                tiktok::TikTok tiktok;
-                                tiktok.loadConfigMap(subKey, subValue.asString(), logKey);
-                            }
-                            // TODO: Add more social media here.
-                            // else
-                            // {
-                            //     _logger->info("Unknown key: {} = {}", subKey, subValue.asString());
-                            // }
-                        }
-                        else
-                        {
-                            _logger->info("Unknown key: {} = {}", subKey, subValue.asString());
-                        }
-                    }
-                    else
-                    {
-                        // Invalid value type
-                        spdlog::error("Invalid format for object: {} in the configuration file.", subValue.asString());
-                        throw std::runtime_error("Invalid format for object in the configuration file.");
-                    }
                 }
             }
         }
@@ -352,7 +314,8 @@ namespace sipeto
             log_level = spdlog::level::off;
             break;
         default:
-            spdlog::warn("Invalid log level '{}'", level);
+            log_level = spdlog::level::debug;
+            spdlog::debug("Invalid log level '{}'", level);
             return;
         }
 

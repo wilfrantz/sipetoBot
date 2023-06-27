@@ -20,12 +20,9 @@ int main(int argc, char **argv)
     /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
     TikTok tiktok;
-    // tiktok.displayMap(tiktok.mapGetter());
+    tiktok.displayMap(tiktok.getTheMap());
     // sipeto.displayInfo();
     exit(0);
-
-    // TikTok tiktok(sipeto.getFromConfigMap("tiktokUrl", tikTok.mapGetter()), sipeto);
-    // tiktok.downloadMedia();
 
     boost::asio::io_context ioc{1};
     auto address = ip::make_address(sipeto.getFromConfigMap("address"));

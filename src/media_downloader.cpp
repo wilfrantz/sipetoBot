@@ -125,6 +125,43 @@ namespace mediaDownloader
         return size * nmemb;
     }
 
+    /// @brief Load each config map from the config file.
+    /// @param root[in] The root of the config file.
+    /// @param socialMedia[in] The social media to load the config map for.
+    /// @param configMap[in] The config map to load.
+    /// @return void
+    void MediaDownloader::loadConfigMap(const Json::Value &root, const std::string &socialMedia,
+                                        std::map<std::string, std::string> &configMap)
+    {
+        _logger->debug("Loading config map for {}.", socialMedia);
+
+        if (!root.isObject())
+        {
+            _logger->error("{}: Json root is not an object.", socialMedia);
+            return;
+        }
+
+        try
+        {
+            for (const auto &configKey : root.getMemberNames())
+            {
+                const auto &configValue = root[configKey];
+                if (configValue.isString())
+                {
+                    configMap.emplace(configKey, configValue.asString());
+                }
+                else
+                {
+                    _logger->warn("{}: Invalid value type for key '{}'. Expected string.", socialMedia, configKey);
+                }
+            }
+        }
+        catch (const Json::Exception &e)
+        {
+            _logger->error("Error parsing JSON for {}: {}", socialMedia, e.what());
+        }
+    }
+
     std::string MediaDownloader::performHttpGetRequest(const std::string &url, const std::string &bearerToken)
     {
         // Initialize the libcurl library

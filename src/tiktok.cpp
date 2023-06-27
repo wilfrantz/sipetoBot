@@ -6,7 +6,7 @@ using namespace mediaDownloader;
 
 namespace tiktok
 {
-    std::map<std::string, std::string> _configMap = {};
+    std::map<std::string, std::string> TikTok::_configMap;
     std::shared_ptr<spdlog::logger> TikTok::_logger = spdlog::stdout_color_mt("TikTok");
 
     MediaDownloader::ReturnCode
