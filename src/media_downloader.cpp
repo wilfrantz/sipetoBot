@@ -166,8 +166,4 @@ namespace mediaDownloader
         return response;
     }
 
-    MediaDownloader::~MediaDownloader()
-    {
-        _logger->debug("MediaDownloader destructor");
-    }
 } // !namespace mediaDownloader

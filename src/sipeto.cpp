@@ -41,9 +41,7 @@ namespace sipeto
 
             Json::Value root;
             file >> root;
-
             validateConfigRoot(root);
-
             parseConfig(root);
         }
         catch (const std::exception &e)
@@ -182,23 +180,52 @@ namespace sipeto
     /// @return none.
     void Sipeto::processTargetKeys(const Json::Value &configValue, const std::string &key)
     {
+        _logger->debug("Processing target key: {}", key);
         if (configValue.isArray())
         {
             for (const auto &element : configValue)
             {
+                if (_keyMap.count(key) > 0)
+                {
+                    const std::string &logKey = _keyMap[key];
+                    if (logKey == "TikTok")
+                    {
+                        tiktok::TikTok tiktok;
+                        tiktok.loadConfigMap(element);
+                        tiktok.displayMap(tiktok.mapGetter());
+                    }
+                }
+                else
+                {
+                    _logger->info("Unknown key: {}", element.asString());
+                }
+                exit(1);
+
                 for (const auto &subKey : element.getMemberNames())
                 {
                     const auto &subValue = element[subKey];
 
+                    // Add data to the corresponding config map based on the key
                     if (subValue.isString())
                     {
-                        // TODO: Add data to the corresponding config map based on the key
-
                         // Check if the key exists in the map
                         if (_keyMap.count(key) > 0)
                         {
                             const std::string &logKey = _keyMap[key];
                             _logger->info("{}: {} = {}", logKey, subKey, subValue.asString());
+                            // _logger->info("Loading config map for {}", key);
+
+                            if (logKey == "TikTok")
+                            {
+                                // _logger->info("{}: {} = {}", logKey, subKey, subValue.asString());
+                                tiktok::TikTok tiktok;
+                                tiktok.loadConfigMap(subKey, subValue.asString(), logKey);
+                            }
+                            // TODO: Add more social media here.
+                            // else
+                            // {
+                            //     _logger->info("Unknown key: {} = {}", subKey, subValue.asString());
+                            // }
                         }
                         else
                         {

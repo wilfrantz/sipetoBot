@@ -1,14 +1,16 @@
 
 #include "include/tiktok.h"
 
-using namespace sipeto;
+// using namespace sipeto;
 using namespace mediaDownloader;
 
 namespace tiktok
 {
+    std::map<std::string, std::string> _configMap = {};
     std::shared_ptr<spdlog::logger> TikTok::_logger = spdlog::stdout_color_mt("TikTok");
 
-    MediaDownloader::ReturnCode TikTok::downloadMedia()
+    MediaDownloader::ReturnCode
+    TikTok::downloadMedia()
     {
         CURL *curl;
         CURLcode res;
@@ -17,12 +19,12 @@ namespace tiktok
         _logger->debug("Downloading media from TikTok URL: {}", _attributes["downloadAddr"]);
         exit(0);
 
-        std::string filePath(_sipeto.getFromConfigMap("tiktokOutputPath", this->mapGetter()) + _attributes["id"] + ".mp4");
+        std::string filePath(getFromConfigMap("tiktokOutputPath", this->_configMap) + _attributes["id"] + ".mp4");
         std::ofstream outputFile(filePath, std::ios::binary);
 
         if (!outputFile)
         {
-            _logger->error("Error opening output file: {}", _sipeto.getFromConfigMap("tiktokOutputPath", this->mapGetter()));
+            _logger->error("Error opening output file: {}", getFromConfigMap("tiktokOutputPath", this->_configMap));
             return MediaDownloader::ReturnCode::MediaDownloadError;
         }
 
@@ -101,11 +103,11 @@ namespace tiktok
         }
 
         // contruct the url for the API request.
-        // const std::string response = TikTok::getVideoMetadata(videoId, _sipeto.getFromConfigMap("client_key"));
-        const std::string endpoint = _sipeto.getFromConfigMap("metaEndpoint", this->mapGetter()) + videoId;
+        // const std::string response = TikTok::getVideoMetadata(videoId, getFromConfigMap("client_key"));
+        const std::string endpoint = getFromConfigMap("metaEndpoint", this->_configMap) + videoId;
 
         const std::string response = TikTok::performHttpGetRequest(endpoint,
-                                                                   _sipeto.getFromConfigMap("client_key", this->mapGetter()));
+                                                                   getFromConfigMap("client_key", this->_configMap));
 
         if (response.empty())
         {

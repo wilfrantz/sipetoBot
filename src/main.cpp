@@ -16,10 +16,12 @@ int main(int argc, char **argv)
     Sipeto sipeto;
     // load configuration map.
     sipeto.loadConfig();
-    sipeto.displayInfo();
 
     /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
+    TikTok tiktok;
+    // tiktok.displayMap(tiktok.mapGetter());
+    // sipeto.displayInfo();
     exit(0);
 
     // TikTok tiktok(sipeto.getFromConfigMap("tiktokUrl", tikTok.mapGetter()), sipeto);
