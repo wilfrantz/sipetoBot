@@ -1,4 +1,4 @@
-# Social Media Downloader Bot
+# Sipeto© simplifies media downloading from social media
 
 ![Sipeto](/lander/favicon.ico)
 
@@ -6,7 +6,7 @@ The Social Media Downloader Bot simplifies media downloading from social media l
 
 ## Table of Contents
 
-- [Social Media Downloader Bot](#social-media-downloader-bot)
+- [Sipeto© simplifies media downloading from social media](#sipeto-simplifies-media-downloading-from-social-media)
   - [Table of Contents](#table-of-contents)
   - [Design](#design)
   - [Prerequisites](#prerequisites)
