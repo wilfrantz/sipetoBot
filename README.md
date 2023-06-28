@@ -1,12 +1,12 @@
-# Sipeto© simplifies media downloading from social media
+# Sipeto©: Powerful Telegram Bot for Effortless Media Downloading 
 
 ![Sipeto](/lander/favicon.ico)
 
-The Social Media Downloader Bot simplifies media downloading from social media links. It offers seamless access to videos, images, and more from platforms like TikTok, Twitter, Instagram, and Facebook. Effortlessly retrieve the media content you need with this powerful tool.
+ Sipeto© simplifies media downloading from social media links. It offers seamless access to videos, images, and more from platforms like TikTok, Twitter, Instagram, and Facebook. Effortlessly retrieve the media content you need with this powerful tool.
 
 ## Table of Contents
 
-- [Sipeto© simplifies media downloading from social media](#sipeto-simplifies-media-downloading-from-social-media)
+- [Sipeto©: Powerful Telegram Bot for Effortless Media Downloading](#sipeto-powerful-telegram-bot-for-effortless-media-downloading)
   - [Table of Contents](#table-of-contents)
   - [Design](#design)
   - [Prerequisites](#prerequisites)
