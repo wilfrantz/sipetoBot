@@ -29,7 +29,7 @@ namespace sipeto
 
         try
         {
-            _logger->info("Loading configuration file: {}.", _configFile);
+            _logger->debug("Loading configuration file: {}.", _configFile);
 
             std::ifstream file(_configFile);
 
@@ -55,7 +55,7 @@ namespace sipeto
     /// @return none.
     void Sipeto::validateConfigRoot(const Json::Value &root)
     {
-        _logger->info("Validating configuration file.");
+        _logger->debug("Validating configuration file.");
         if (!root.isArray())
         {
             throw std::runtime_error("Config file is not an array.");
@@ -67,7 +67,7 @@ namespace sipeto
     /// @return none.
     void Sipeto::parseConfig(const Json::Value &root)
     {
-        _logger->info("Parsing configuration file.");
+        _logger->debug("Parsing configuration file.");
 
         for (const auto &object : root)
         {
@@ -237,11 +237,9 @@ namespace sipeto
     /// @return none.
     void Sipeto::displayInfo()
     {
-        _logger->info("Welcome to {} {}.",
-                      getFromConfigMap("project", this->_configMap),
-                      getFromConfigMap("project", this->_configMap));
+        _logger->info("Welcome to {}", getFromConfigMap("project", this->_configMap));
         _logger->info("{}", getFromConfigMap("description", this->_configMap));
-        _logger->info("Developed by: {}.", getFromConfigMap("author", this->_configMap));
+        _logger->info("Log level set to: {}", getFromConfigMap("mode", this->_configMap));
 
 // Get the Boost version, if available
 #ifdef BOOST_LIB_VERSION
@@ -281,7 +279,7 @@ namespace sipeto
         // Display the configuration file in debug mode.
         for (const auto &element : this->_configMap)
         {
-            _logger->debug("Config: {} = {}", element.first, element.second);
+            _logger->debug("{} : {}", element.first, element.second);
         }
     }
 
@@ -290,7 +288,6 @@ namespace sipeto
     /// return none.
     void Sipeto::setLogLevel(const std::string &level)
     {
-        _logger->debug("Setting log level to: {}", level);
         spdlog::level::level_enum log_level;
 
         switch (hash(level.c_str()))
@@ -321,8 +318,7 @@ namespace sipeto
 
         spdlog::set_level(log_level);
         spdlog::stdout_color_mt("sipeto");
-
-        _logger->info("Log level set to: {}", level);
+        _logger->debug("Log level set to: {}", level);
     }
 
     void Sipeto::sendMessage(std::string chat_id, std::string text)

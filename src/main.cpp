@@ -19,9 +19,10 @@ int main(int argc, char **argv)
 
     /// NOTE: set log level (debug, info, warn, error, critical, or off)
     sipeto.setLogLevel(sipeto.getFromConfigMap("mode"));
+    sipeto.displayInfo();
+
     TikTok tiktok;
     tiktok.displayMap(tiktok.getTheMap());
-    // sipeto.displayInfo();
     exit(0);
 
     boost::asio::io_context ioc{1};
