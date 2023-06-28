@@ -11,10 +11,6 @@ The Social Media Downloader Bot simplifies media downloading from social media l
   - [Design](#design)
   - [Prerequisites](#prerequisites)
   - [Progress](#progress)
-    - [Structure](#structure)
-    - [Build the server](#build-the-server)
-    - [Build Integration](#build-integration)
-    - [Build the User Interface](#build-the-user-interface)
   - [Build the program](#build-the-program)
   - [Usage](#usage)
   - [Contribution](#contribution)
@@ -61,7 +57,7 @@ Once the dependencies are installed, you can proceed to build and run the Social
   - [ ] Backend & frontend interaction.
 - [ ] Build the server.
 - [ ] Build Integration
-  - [ ] TikTok
+  - [ ] TikTok (in progress)
   - [ ] Twitter
   - [ ] Instagram
   - [ ] Facebook
@@ -69,28 +65,6 @@ Once the dependencies are installed, you can proceed to build and run the Social
   - [ ] Telegram
   - [ ] WebApp
 - [ ] Testing
-
-### Structure
-
-- Load configuration data into each interface: The configuration data has been successfully integrated into each interface module.
-- Implement core functionality: The core functionality of the bot has been implemented, including handling media downloads and interacting with social media APIs.
-- Backend & frontend interaction: Establishing the connection and communication between the backend and frontend components of the application
-
-### Build the server
-
-- Building the server is in progress.
-
-### Build Integration
-
-- [ ] Integration with TikTok is pending.
-- [ ] Integration with Twitter is pending.
-- [ ] Integration with Instagram is pending.
-- [ ] Integration with Facebook is pending.
-
-### Build the User Interface
-
-- [ ] User interface development for Telegram is ongoing.
-- [ ] User interface development for WebApp is pending.
 
 ## Build the program
 
